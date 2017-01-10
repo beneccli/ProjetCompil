@@ -69,6 +69,7 @@ struct _Class {
 	DeclP members;
 	struct _Class *super;
 	DeclP declarations;
+	struct _Class *next;
 };
 
 struct _Decl {
