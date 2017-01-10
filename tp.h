@@ -12,7 +12,7 @@ typedef unsigned char bool;
  * Certains tokens servent directement d'etiquette. Attention ici a ne pas
  * donner des valeurs identiques a celles des tokens.
  */
-enum {LIST, PLUS, MINUS, MULT, DIV, NE, EQ, LT, LE, GT, GE};
+enum {LIST, PLUS, MINUS, MULT, QUO, NE, EQ, LT, LE, GT, GE};
 
 /* Codes d'erreurs */
 #define NO_ERROR	0
@@ -25,16 +25,8 @@ enum {LIST, PLUS, MINUS, MULT, DIV, NE, EQ, LT, LE, GT, GE};
 #define EVAL_ERROR	50
 #define UNEXPECTED	10O
 
-/* la structure d'un arbre (noeud ou feuille) */
-typedef struct _Tree {
-	short op;         /* etiquette de l'operateur courant */
-	short nbChildren; /* nombre de sous-arbres */
-	union {
-		char *str;      /* valeur de la feuille si op = Id ou STR */
-		int val;        /* valeur de la feuille si op = Cste */
-		struct _Tree **children; /* tableau des sous-arbres */
-	} u;
-} Tree, *TreeP;
+struct _Tree;
+typedef struct _Tree Tree, *TreeP;
 
 struct _Class;
 typedef struct _Class Class, *ClassP;
@@ -48,6 +40,27 @@ typedef struct _Method Method, *MethodP;
 struct _Decl;
 typedef struct _Decl Decl, *DeclP;
 
+struct _Block;
+typedef struct _Block Block, *BlockP;
+
+
+/* la structure d'un arbre (noeud ou feuille) */
+struct _Tree {
+	short op;         /* etiquette de l'operateur courant */
+	short nbChildren; /* nombre de sous-arbres */
+	union {
+		char *str;      /* valeur de la feuille si op = Id ou STR */
+		int val;        /* valeur de la feuille si op = Cste */
+		BlockP block;
+		struct _Tree **children; /* tableau des sous-arbres */
+	} u;
+};
+
+struct _Block {
+	DeclP declarations;
+	TreeP body;
+};
+
 struct _Arg {
 	char* name;
 	ClassP type;
@@ -57,7 +70,7 @@ struct _Arg {
 struct _Method {
 	char* name;
 	ArgP args;
-	TreeP body;
+	BlockP body;
 	ClassP return_type;
 	struct _Method *next;
 };
