@@ -150,9 +150,9 @@ TreeP makeLeafInt(short op, int val) {
   return(tree);
 }
 
-TreeP makeLeafLVar(short op, VarDeclP lvar) {
+TreeP makeLeafLVar(short op, DeclP lvar) {
   TreeP tree = makeNode(0, op); 
-  tree->u.lvar = lvar;
+  /*tree->u.lvar = lvar;*/
   return(tree);
 }
 
