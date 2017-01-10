@@ -152,7 +152,7 @@ TreeP makeLeafInt(short op, int val) {
 
 TreeP makeLeafLVar(short op, DeclP lvar) {
   TreeP tree = makeNode(0, op); 
-  /*tree->u.lvar = lvar;*/
+  tree->u.block->declarations = lvar;
   return(tree);
 }
 
