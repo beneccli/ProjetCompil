@@ -1,6 +1,6 @@
 *~
 tp.exe*
-tp/
+tp
 *.o
 tp_l.*
 tp_y.*
