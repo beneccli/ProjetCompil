@@ -8,3 +8,4 @@ test/*~
 test/*.out
 test/*/*~
 test/*/*.out
+.directory
