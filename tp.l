@@ -14,6 +14,8 @@ NotStar		[^*]
 NotStarPar      [^*/]
 EscGuill [^(\\(^"))]
 Str	\"({BS}|{EscGuill})*\"
+Comment (\/\*([^*]|[\r\n]|([\*]+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)
+
 
 
 %{
@@ -57,6 +59,7 @@ void lexError(char c) {
 
 %%
 {Delim}+	{}
+{Comment}	{}
 {Entier}+ 	{ yylval.I = atoi(yytext); return(Cste); }
 {Str}		{ yylval.S = strdup(yytext); return(Str); }
 {Lettre}{LC}*	{ return keywordOrId(); }
