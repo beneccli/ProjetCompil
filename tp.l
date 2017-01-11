@@ -5,7 +5,7 @@ Upper	[A-Z]
 Lettre	[a-zA-Z]
 LC 	({Lettre}|{Chiffre})
 Delim   [ \t\n\r]
-Symbole [&+\-*/();:,\.{}]
+Symbole [&();:,\.{}]
 BS      \\.
 PasBSG [^\\"]
 Guill		"\""
@@ -28,6 +28,7 @@ extern int yylex();
 
 int keywordOrId() {
   if (! strcmp(yytext, "if")) return IF;
+  if (! strcmp(yytext, "new")) return NeW;
   if (! strcmp(yytext, "then")) return THEN;
   if (! strcmp(yytext, "else")) return ELSE;
   if (! strcmp(yytext, "class")) return CLASS;
@@ -62,10 +63,14 @@ void lexError(char c) {
 {Lettre}{LC}*	{ return keywordOrId(); }
 {Symbole}	{ return(yytext[0]); }
 ":="		{ return(AFF); }
-"="			{ yylval.C = EQ; return(RelOp); }
+"="		{ yylval.C = EQ; return(RelOp); }
 "<>"		{ yylval.C = NE; return(RelOp); }
 "<="		{ yylval.C = LE; return(RelOp); }
 ">="		{ yylval.C = GE; return(RelOp); }
-">"			{ yylval.C = GT; return(RelOp); }
-"<"			{ yylval.C = LT; return(RelOp); }
+">"		{ yylval.C = GT; return(RelOp); }
+"<"		{ yylval.C = LT; return(RelOp); }
+"+"		{ return(ADD); }
+"-"		{ return(SUB); }
+"/"		{ return(DIV); }
+"*"		{ return(MUL); }
 %%

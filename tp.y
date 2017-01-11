@@ -26,7 +26,7 @@ classLOpt:
 | class classLOpt 
 ;
 
-class: declClass block IS '{' corps '}'
+class: declClass blockCons IS '{' corps '}'
 ;
 
 declClass: CLASS Id '(' paramLOpt ')' extendsOpt
@@ -83,8 +83,12 @@ redifOpt:
 block: '{' blockOpt '}'
 ;
 
+blockCons: 
+| block
+;
+
 blockOpt: instrLOpt
-| varDecl varLOpt IS instr instrLOpt
+| varDecl varLOpt IS instr instrLOpt 
 ;
 
 instrLOpt:
@@ -105,7 +109,7 @@ expr: expr RelOp expr
 | expr DIV expr	      
 | ADD expr %prec unary  
 | SUB expr %prec unary
-| NeW Id '(' paramLOpt ')'  
+| NeW Id '(' exprL ')'  
 | '(' AS Id ':' expr ')'
 | Cste		       
 | Id

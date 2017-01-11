@@ -155,6 +155,7 @@ int main(int argc, char **argv) {
     case ELSE:
     case CLASS:
     case IS:
+    case NeW:
     case AFF:
     case VAR:
     case DEF:
@@ -165,11 +166,7 @@ int main(int argc, char **argv) {
     case ')':
     case ':':
     case '&':
-    case '+':
     case '\\':
-    case '-':
-    case '*':
-    case '/':
     case ';':
     case ',':
     case '.':
@@ -180,6 +177,8 @@ int main(int argc, char **argv) {
       break;
     case ADD:
     case SUB:
+    case MUL:
+    case DIV:
        /* a completer */
      if (verbose) printf("Oper arithmetique:\t%s\n", yytext);
       break;
