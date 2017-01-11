@@ -1,6 +1,6 @@
 /* attention: NEW est defini dans tp.h Utilisez un autre token */
 %token IS CLASS VAR EXTENDS DEF OVERRIDE RETURN AS IF THEN ELSE AFF ADD SUB MUL DIV THIS SUPER RESULT NeW
-%token<S> Id
+%token<S> Id Str
 %token<I> Cste
 %token<C> RelOp
 
@@ -23,7 +23,7 @@ Prog : classLOpt block
 ;
 
 classLOpt:
-| class classLOpt
+| class classLOpt 
 ;
 
 class: declClass block IS '{'corps'}'
@@ -105,6 +105,7 @@ expr: expr RelOp expr
 | '(' AS Id ':' expr ')'
 | Cste		       
 | Id
+| Str	
 | THIS
 | SUPER
 | RESULT	
