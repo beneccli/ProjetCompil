@@ -1,6 +1,6 @@
 /* attention: NEW est defini dans tp.h Utilisez un autre token */
 %token IS CLASS VAR EXTENDS DEF OVERRIDE RETURN AS IF THEN ELSE AFF ADD SUB MUL DIV THIS SUPER RESULT NeW
-%token<S> Id
+%token<S> Id Str
 %token<I> Cste
 %token<C> RelOp
 
@@ -26,18 +26,22 @@ classLOpt:
 | class classLOpt
 ;
 
-class: declClass block IS '{'corps'}'
+class: declClass block IS '{' corps '}'
 ;
 
-declClass: CLASS Id '('paramLOpt')' extendsOpt
+declClass: CLASS Id '(' paramLOpt ')' extendsOpt
 ;
 
 extendsOpt:
-| EXTENDS Id '('paramLOpt')'
+| EXTENDS Id '(' exprLOpt ')'
 ;
 
 paramLOpt:
-| param paramLOpt
+| paramL
+;
+
+paramL: param
+| param ',' paramL
 ;
 
 param: Id ':' Id
@@ -105,10 +109,19 @@ expr: expr RelOp expr
 | '(' AS Id ':' expr ')'
 | Cste		       
 | Id
+| Str
 | THIS
 | SUPER
 | RESULT	
 | '(' expr ')'		
+;
+
+exprLOpt:
+|exprL
+;
+
+exprL: expr
+| expr ',' exprL
 ;
 
 
