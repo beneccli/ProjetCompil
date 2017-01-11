@@ -23,7 +23,7 @@ Prog : classLOpt block
 ;
 
 classLOpt:
-| class classLOpt
+| class classLOpt 
 ;
 
 class: declClass block IS '{' corps '}'
