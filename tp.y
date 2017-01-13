@@ -1,6 +1,6 @@
 /* attention: NEW est defini dans tp.h Utilisez un autre token */
-%token IS CLASS VAR EXTENDS DEF OVERRIDE RETURN AS IF THEN ELSE AFF ADD SUB MUL DIV THIS SUPER RESULT NeW
-%token<S> Id Str
+%token IS CLASS VAR EXTENDS DEF OVERRIDE RETURN AS IF THEN ELSE AFF ADD SUB MUL DIV THIS SUPER RESULT NeW DOT AND
+%token<S> Id Str Idc
 %token<I> Cste
 %token<C> RelOp
 
@@ -9,6 +9,9 @@
 %left ADD SUB
 %left MUL DIV
 %nonassoc unary
+%left AND
+%left DOT
+
 
 %{
 #include "tp.h"
@@ -29,11 +32,11 @@ classLOpt:
 class: declClass blockCons IS '{' corps '}'
 ;
 
-declClass: CLASS Id '(' paramLOpt ')' extendsOpt
+declClass: CLASS Idc '(' paramLOpt ')' extendsOpt
 ;
 
 extendsOpt:
-| EXTENDS Id '(' exprLOpt ')'
+| EXTENDS Idc '(' exprLOpt ')'
 ;
 
 paramLOpt:
@@ -44,7 +47,7 @@ paramL: param
 | param ',' paramL
 ;
 
-param: Id ':' Id
+param: Id ':' Idc
 ;
 
 corps: varLOpt methodeLOpt
@@ -54,7 +57,7 @@ varLOpt:
 | varDecl varLOpt
 ;
 
-varDecl: VAR Id ':' Id affOpt ';'
+varDecl: VAR Id ':' Idc affOpt ';'
 ;
 
 affOpt:
@@ -68,12 +71,12 @@ methodeLOpt:
 methodeDecl: redifOpt DEF Id '('paramLOpt')' bodyAlt
 ;
 
-bodyAlt: ':' Id AFF expr
+bodyAlt: ':' Idc AFF expr
 | returnOpt IS block
 ;
 
 returnOpt:
-| ':' Id
+| ':' Idc
 ;
 
 redifOpt:
@@ -109,15 +112,21 @@ expr: expr RelOp expr
 | expr DIV expr	      
 | ADD expr %prec unary  
 | SUB expr %prec unary
-| NeW Id '(' exprL ')'  
-| '(' AS Id ':' expr ')'
+| expr AND expr
+| NeW Idc '(' exprLOpt ')'  
+| '(' AS Idc ':' expr ')'
+| expr DOT Id
 | Cste		       
 | Id
 | Str
 | THIS
+| message
 | SUPER
 | RESULT	
 | '(' expr ')'		
+;
+
+message: expr DOT Id '(' exprLOpt ')'
 ;
 
 exprLOpt:

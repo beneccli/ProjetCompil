@@ -5,7 +5,7 @@ Upper	[A-Z]
 Lettre	[a-zA-Z]
 LC 	({Lettre}|{Chiffre})
 Delim   [ \t\n\r]
-Symbole [&();:,\.{}]
+Symbole [();:,\{}]
 BS      \\.
 PasBSG [^\\"]
 Guill		"\""
@@ -52,7 +52,7 @@ int keywordOrId() {
 void lexError(char c) {
   fprintf(stderr, "Error: Skipping invalid character '%c' on line %d\n",
           c, yylineno);
-  setError(LEXICAL_ERROR);
+  setError(LEXICAL_ERROR); 
 }
 %}
 
@@ -60,6 +60,7 @@ void lexError(char c) {
 {Delim}+	{}
 {Entier}+ 	{ yylval.I = atoi(yytext); return(Cste); }
 {Str}		{ yylval.S = strdup(yytext); return(Str); }
+{Upper}{LC}*    { yylval.S = strdup(yytext); return(Idc); }
 {Lettre}{LC}*	{ return keywordOrId(); }
 {Symbole}	{ return(yytext[0]); }
 ":="		{ return(AFF); }
@@ -69,6 +70,8 @@ void lexError(char c) {
 ">="		{ yylval.C = GE; return(RelOp); }
 ">"		{ yylval.C = GT; return(RelOp); }
 "<"		{ yylval.C = LT; return(RelOp); }
+"&"             { return(AND); }
+"."             { return(DOT); }
 "+"		{ return(ADD); }
 "-"		{ return(SUB); }
 "/"		{ return(DIV); }

@@ -141,6 +141,10 @@ int main(int argc, char **argv) {
       makeIdent(yylineno, yylval.S);
       if (verbose) printf("Identificateur:\t\t%s\n", yylval.S);
       break;
+    case Idc:
+       makeIdent(yylineno, yylval.S);
+      if (verbose) printf("Nom de classe:\t\t%s\n", yylval.S);
+      break;
     case Cste:
       /* ici on suppose qu'on a recupere la valeur de la constante, pas sa
        * representation sous forme de chaine de caracteres.
@@ -150,6 +154,8 @@ int main(int argc, char **argv) {
     case Str:
 	  printf("Chaine de caractere:\t%s\n", yytext);
 	  break;
+    case DOT :
+    case AND :
     case IF:
     case THEN:
     case ELSE:
