@@ -1,6 +1,8 @@
 *~
 tp.exe*
 tp
+test_lex
+#*
 *.o
 tp_l.*
 tp_y.*
