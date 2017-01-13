@@ -156,10 +156,16 @@ int main(int argc, char **argv) {
 	  break;
     case DOT :
     case AND :
+    case OVERRIDE:
+    case RETURN:
+    case AS:
+    case SUPER:
     case IF:
     case THEN:
     case ELSE:
     case CLASS:
+    case THIS:
+    case RESULT:
     case IS:
     case NeW:
     case AFF:

@@ -101,7 +101,7 @@ instrLOpt:
 instr: block
 | expr ';'
 | RETURN ';'
-| Id AFF expr ';'
+| expr AFF expr ';'
 | IF expr THEN instr ELSE instr
 ;
 

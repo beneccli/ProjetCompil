@@ -12,8 +12,8 @@ Guill		"\""
 Star  		"*"
 NotStar		[^*]
 NotStarPar      [^*/]
-EscGuill [^(\\(^"))]
-Str	\"({BS}|{EscGuill})*\"
+Str	({BS}|{PasBSG})
+Comm ({NotStar}|{Star}+{NotStarPar})*{Star}*
 
 
 %{
@@ -59,10 +59,11 @@ void lexError(char c) {
 %%
 {Delim}+	{}
 {Entier}+ 	{ yylval.I = atoi(yytext); return(Cste); }
-{Str}		{ yylval.S = strdup(yytext); return(Str); }
+{Guill}{Str}*{Guill}		{ yylval.S = strdup(yytext); return(Str); }
 {Upper}{LC}*    { yylval.S = strdup(yytext); return(Idc); }
-{Lettre}{LC}*	{ return keywordOrId(); }
+{Lower}{LC}*	{ return keywordOrId(); }
 {Symbole}	{ return(yytext[0]); }
+"/*"{Comm}"*/"  {}
 ":="		{ return(AFF); }
 "="		{ yylval.C = EQ; return(RelOp); }
 "<>"		{ yylval.C = NE; return(RelOp); }
