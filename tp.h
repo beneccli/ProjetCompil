@@ -92,3 +92,13 @@ typedef union
 } YYSTYPE;
 
 #define YYSTYPE YYSTYPE
+
+TreeP makeLeafStr(short op, char *str);       
+TreeP makeLeafInt(short op, int val);	      
+TreeP makeTree(short op, int nbChildren, ...);
+TreeP makeLeafLVar(short op, DeclParamP lvar);
+void fillClass(ClassP class, DeclParamP params, TreeP extends, TreeP constructor, DeclParamP members, MethodP methods);
+ClassP makeClass(char *name);
+MethodP makeMethod(int override, char* name, DeclParamP params, TreeP body);
+DeclParamP makeDecl(char* name, char* class, TreeP expression);
+DeclParamP makeParam(char* name, char* class);
