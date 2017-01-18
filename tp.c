@@ -165,7 +165,6 @@ void fillClass(ClassP class, DeclParamP params, TreeP extends, TreeP constructor
   class->constructorBody = constructor;
   class->members = members;
   class->methods = methods;
-  return class;
 }
 
 ClassP makeClass(char *name) {
@@ -192,13 +191,18 @@ DeclParamP makeDecl(char* name, char* class, TreeP expression) {
   decl->name = name;
   decl->typeName = class;
   decl->expression = expression;
+  return decl;
 }
 
 DeclParamP makeParam(char* name, char* class) {
-  char* class, TreeP expression) {
-  DeclParamP decl = NEW(1, DeclParam);
-  decl->decl = 0;
-  decl->name = name;
-  decl->typeName = class;
+  DeclParamP param = NEW(1, DeclParam);
+  param->decl = 0;
+  param->name = name;
+  param->typeName = class;
+  param->expression = NULL;
+  return param;
 }
 	
+void evalMain(TreeP tree) {
+ 
+}

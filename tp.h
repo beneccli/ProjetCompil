@@ -87,8 +87,9 @@ typedef union
     char C;
     int I;
     TreeP pT;
-    Method pM;
-    
+    MethodP pM;
+    ClassP pC;
+    DeclParamP pDP;
 } YYSTYPE;
 
 #define YYSTYPE YYSTYPE
@@ -102,3 +103,4 @@ ClassP makeClass(char *name);
 MethodP makeMethod(int override, char* name, DeclParamP params, TreeP body);
 DeclParamP makeDecl(char* name, char* class, TreeP expression);
 DeclParamP makeParam(char* name, char* class);
+void evalMain(TreeP tree);
