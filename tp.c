@@ -11,7 +11,7 @@ extern int yyparse();
 extern int yylineno;
 
 
-ClassP lastClass = NULL;
+ClassP listeClass = NULL;
 
 /* Niveau de 'verbosite'.
  * Par defaut, n'imprime que le resultat et les messages d'erreur
@@ -153,18 +153,52 @@ TreeP makeLeafInt(short op, int val) {
   return(tree);
 }
 
-TreeP makeLeafLVar(short op, DeclP lvar) {
+TreeP makeLeafLVar(short op, DeclParamP lvar) {
   TreeP tree = makeNode(0, op); 
-  tree->u.declarations = lvar;
+  tree->u.declParams = lvar;
   return(tree);
 }
 
-ClassP makeClass(char* name) {
-  ClassP class = NEW(1, Class);
-  class->name = name;
-  class->next = NULL;
-  if(lastClass != NULL)	  
-    lastClass->next = class;
-  lastClass = class;
+void fillClass(ClassP class, DeclParamP params, TreeP extends, TreeP constructor, DeclParamP members, MethodP methods) {
+  class->constructorParams = params;
+  class->superTree = extends;
+  class->constructorBody = constructor;
+  class->members = members;
+  class->methods = methods;
   return class;
 }
+
+ClassP makeClass(char *name) {
+  ClassP class = NEW(1, Class);
+  class->name = name;
+  if(listeClass != NULL)	  
+    class->next = listeClass;
+  listeClass = class;
+  return class;
+}
+
+MethodP makeMethod(int override, char* name, DeclParamP params, TreeP body) {
+  MethodP method = NEW(1, Method);
+  method->override = override;
+  method->name = name;
+  method->params = params;
+  method->body = body;
+  return method;
+}
+
+DeclParamP makeDecl(char* name, char* class, TreeP expression) {
+  DeclParamP decl = NEW(1, DeclParam);
+  decl->decl = 1;
+  decl->name = name;
+  decl->typeName = class;
+  decl->expression = expression;
+}
+
+DeclParamP makeParam(char* name, char* class) {
+  char* class, TreeP expression) {
+  DeclParamP decl = NEW(1, DeclParam);
+  decl->decl = 0;
+  decl->name = name;
+  decl->typeName = class;
+}
+	
