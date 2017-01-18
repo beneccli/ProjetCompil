@@ -11,7 +11,7 @@ class Point(xc: Integer, yc: Integer) { x := xc; y := yc; } is {
 
   def print() is {
       "Inside Point::print".println();
-      /* Exemples avec l'operateur & de concatenation de chaines */
+
       name.print();
       ( "= (" & x.toString() & ", " & y.toString() & ")" ).println();
   }

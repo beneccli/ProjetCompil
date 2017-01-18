@@ -31,8 +31,8 @@ typedef struct _Tree Tree, *TreeP;
 struct _Class;
 typedef struct _Class Class, *ClassP;
 
-struct _Arg;
-typedef struct _Arg Arg, *ArgP;
+struct _Param;
+typedef struct _Param Param, *ParamP;
 
 struct _Method;
 typedef struct _Method Method, *MethodP;
@@ -40,63 +40,56 @@ typedef struct _Method Method, *MethodP;
 struct _Decl;
 typedef struct _Decl Decl, *DeclP;
 
-struct _Block;
-typedef struct _Block Block, *BlockP;
-
-
 /* la structure d'un arbre (noeud ou feuille) */
 struct _Tree {
-	short op;         /* etiquette de l'operateur courant */
-	short nbChildren; /* nombre de sous-arbres */
-	union {
-		char *str;      /* valeur de la feuille si op = Id ou STR */
-		int val;        /* valeur de la feuille si op = Cste */
-		BlockP block;
-		struct _Tree **children; /* tableau des sous-arbres */
-	} u;
-};
-
-struct _Block {
+    short op;         /* etiquette de l'operateur courant */
+    short nbChildren; /* nombre de sous-arbres */
+    union {
+	char *str;      /* valeur de la feuille si op = Id ou STR */
+	int val;        /* valeur de la feuille si op = Cste */
 	DeclP declarations;
-	TreeP body;
+	struct _Tree **children; /* tableau des sous-arbres */
+    } u;
 };
 
-struct _Arg {
-	char* name;
-	ClassP type;
-	struct _Arg *next;
+struct _Param {
+    char* name;
+    ClassP type;
+    struct _Param *next;
 };
 
 struct _Method {
-	char* name;
-	ArgP args;
-	BlockP body;
-	ClassP return_type;
-	struct _Method *next;
+    char* name;
+    ParamP args;
+    TreeP body;
+    ClassP return_type;
+    struct _Method *next;
 };
 
 struct _Class {
-	char* name;
-	MethodP constructor;
-	MethodP methods;
-	DeclP members;
-	struct _Class *super;
-	DeclP declarations;
-	struct _Class *next;
+    char* name;
+    TreeP constructorBody;
+    ParamP constructorParams;
+    MethodP methods;
+    DeclP members;
+    struct _Class *super;
+    TreeP superParams;
+    struct _Class *next;
 };
 
 struct _Decl {
-	char* name;
-	ClassP type;
-	TreeP expression;
-	struct _Decl *next;
+    char* name;
+    ClassP type;
+    TreeP expression;
+    struct _Decl *next;
 };
 
 typedef union
-{ char *S;
-	char C;
-	int I;
-	TreeP pT;
+{
+    char *S;
+    char C;
+    int I;
+    TreeP pT;
 } YYSTYPE;
 
 #define YYSTYPE YYSTYPE

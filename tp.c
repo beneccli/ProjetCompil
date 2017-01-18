@@ -10,6 +10,9 @@
 extern int yyparse();
 extern int yylineno;
 
+
+ClassP lastClass = NULL;
+
 /* Niveau de 'verbosite'.
  * Par defaut, n'imprime que le resultat et les messages d'erreur
  */
@@ -152,7 +155,16 @@ TreeP makeLeafInt(short op, int val) {
 
 TreeP makeLeafLVar(short op, DeclP lvar) {
   TreeP tree = makeNode(0, op); 
-  tree->u.block->declarations = lvar;
+  tree->u.declarations = lvar;
   return(tree);
 }
 
+ClassP makeClass(char* name) {
+  ClassP class = NEW(1, Class);
+  class->name = name;
+  class->next = NULL;
+  if(lastClass != NULL)	  
+    lastClass->next = class;
+  lastClass = class;
+  return class;
+}
