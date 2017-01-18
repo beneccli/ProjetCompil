@@ -3,6 +3,8 @@
 %token<S> Id Str Idc
 %token<I> Cste
 %token<C> RelOp
+%type<pT>
+%type<I> redifOpt
 
 %right ELSE
 %left RelOp
@@ -22,65 +24,62 @@ extern void yyerror(char *);
 %}
 
 %%
-Prog : classLOpt block
+Prog : classLOpt block                                                 {evalMain($2);}
 ;
 
-classLOpt:
-| class classLOpt 
+classLOpt:                                                                          
+| class classLOpt                                                     
 ;
 
-class: declClass blockCons IS '{' corps '}'
+class: classHeader '(' paramLOpt ')' extendsOpt blockCons IS '{' varLOpt methodeLOpt '}' {fillClass($1,$3,$5,$6,$9,$10);}
 ;
 
-declClass: CLASS Idc '(' paramLOpt ')' extendsOpt
+classHeader: CLASS Idc                                                                   {$$ = makeClass($2);}
 ;
 
-extendsOpt:
-| EXTENDS Idc '(' exprLOpt ')'
+extendsOpt:                                                                              {$$ = NIL(Tree);}
+| EXTENDS Idc '(' exprLOpt ')'                                                           {$$ = makeTree(EXT,2,makeLeafStr(IDC,$2),$4);}
 ;
 
-paramLOpt:
-| paramL
+paramLOpt:                                                                               {$$ = NIL(Tree);}
+| paramL                                                                                 {$$ = $1;}
 ;
 
-paramL: param
-| param ',' paramL
+paramL: param                                                                            {$$ = $1;}
+| param ',' paramL                                                                       {$$ = $1; $1.next = $3;}
 ;
 
-param: Id ':' Idc
+param: Id ':' Idc                                                                        {$$ = makeParam($1,$3);}
 ;
 
-corps: varLOpt methodeLOpt
+varLOpt:                                                                                 {$$ = NIL(DeclParam);}
+| varDecl varLOpt                                                                        {$$ = $1; $1.next = $2;}
 ;
 
-varLOpt:
-| varDecl varLOpt
+varDecl: VAR Id ':' Idc affOpt ';'                                                       {$$ = makeDecl($2,$4,$5);}
 ;
 
-varDecl: VAR Id ':' Idc affOpt ';'
+affOpt:                                                                                  {$$ = NIL(Tree);}
+| AFF expr                                                                               {$$ = $2;}
 ;
 
-affOpt:
-| AFF expr
+methodeLOpt:                                                                             {$$ = NIL(MethodP);}
+| methodeDecl methodeLOpt                                                                {$$ = $1; $1.next = $2;}
 ;
 
-methodeLOpt:
-| methodeDecl methodeLOpt
+methodeDecl: redifOpt DEF Id '('paramLOpt')' bodyAlt                                     {$$ = makeMethod($1,$3,$5,$7);}
 ;
 
-methodeDecl: redifOpt DEF Id '('paramLOpt')' bodyAlt
-;
-
-bodyAlt: ':' Idc AFF expr             
-| returnOpt IS block                      
+bodyAlt: ':' Idc AFF expr                                                                {$$ = makeTree(BODY,2,makeLeafStr(IDC,$2),makeTree(LIST,2,$4,makeTree(RET,0)));}
+| returnOpt IS block                                                                     {$$ = makeTree(BODY,2,$1,$3);}
 ;
 
 returnOpt:                                                   {$$ = NIL(Tree);}
 | ':' Idc                                                    {$$ = makeLeafStr(IDC,$2);
 ;
 
-redifOpt:                                                    {$$ = NIL(Tree);}
-| OVERRIDE                                                   {$$ = makeTree(OVRD,0);}
+redifOpt:                                                    {$$ = 0;}
+| OVERRIDE                                                   {$$ = 1;}
 ;
 
 blockCons:                                                   {$$ = NIL(Tree);}
@@ -93,7 +92,8 @@ block: '{' blockOpt '}'                                      {$$ =$2;}
 
 
 blockOpt: instrLOpt                                          {$$ = $1;}
-| varDecl varLOpt IS instr instrLOpt                         {TreeP t1 = makeTree(LIST,2,$1,$2);
+ | varDecl varLOpt IS instr instrLOpt                         {$1.next = $2;
+                                                              TreeP t1 = makeLeafLvar(DECLS,$1);
                                                               TreeP t2 = makeTree(LIST,2,$4,$5);
                                                               $$ = makeTree(ISBLOC,2,t1,t2);} 
 ;

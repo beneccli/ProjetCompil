@@ -12,7 +12,7 @@ typedef unsigned char bool;
  * Certains tokens servent directement d'etiquette. Attention ici a ne pas
  * donner des valeurs identiques a celles des tokens.
  */
-enum {LIST, PLUS, MINUS, MULT, QUO, NE, EQ, LT, LE, GT, GE, CONCAT, ID, IDC, ITE, NEWC, ENVOI, CAST, SELEC, CONST, STRG, THI, SUP, RES, RET, AFFECT, ISBLOC, OVRD, EXT, BODY};
+enum {LIST, PLUS, MINUS, MULT, QUO, NE, EQ, LT, LE, GT, GE, CONCAT, ID, IDC, ITE, NEWC, ENVOI, CAST, SELEC, CONST, STRG, THI, SUP, RES, RET, AFFECT, ISBLOC, OVRD, EXT, BODY,DECLS};
 
 /* Codes d'erreurs */
 #define NO_ERROR	0
