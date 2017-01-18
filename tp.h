@@ -12,7 +12,7 @@ typedef unsigned char bool;
  * Certains tokens servent directement d'etiquette. Attention ici a ne pas
  * donner des valeurs identiques a celles des tokens.
  */
-enum {LIST, PLUS, MINUS, MULT, QUO, NE, EQ, LT, LE, GT, GE, CONCAT, ID, IDC, ITE, NEWC, ENVOI, CAST, SELEC, CONST, STRG, THI, SUP, RES, RET, AFFECT, ISBLOC, OVRD};
+enum {LIST, PLUS, MINUS, MULT, QUO, NE, EQ, LT, LE, GT, GE, CONCAT, ID, IDC, ITE, NEWC, ENVOI, CAST, SELEC, CONST, STRG, THI, SUP, RES, RET, AFFECT, ISBLOC, OVRD, EXT, BODY};
 
 /* Codes d'erreurs */
 #define NO_ERROR	0
@@ -37,8 +37,8 @@ typedef struct _Param Param, *ParamP;
 struct _Method;
 typedef struct _Method Method, *MethodP;
 
-struct _Decl;
-typedef struct _Decl Decl, *DeclP;
+struct _DeclParam;
+typedef struct _DeclParam DeclParam, *DeclParamP;
 
 /* la structure d'un arbre (noeud ou feuille) */
 struct _Tree {
@@ -47,41 +47,38 @@ struct _Tree {
     union {
 	char *str;      /* valeur de la feuille si op = Id ou STR */
 	int val;        /* valeur de la feuille si op = Cste */
-	DeclP declarations;
+	DeclParamP declParams;
 	struct _Tree **children; /* tableau des sous-arbres */
     } u;
 };
 
-struct _Param {
-    char* name;
-    ClassP type;
-    struct _Param *next;
-};
-
 struct _Method {
     char* name;
-    ParamP args;
+    DeclParamP params;
     TreeP body;
     ClassP return_type;
+    int override;
     struct _Method *next;
 };
 
 struct _Class {
     char* name;
     TreeP constructorBody;
-    ParamP constructorParams;
+    DeclParamP constructorParams;
     MethodP methods;
-    DeclP members;
+    DeclParamP members;
     struct _Class *super;
-    TreeP superParams;
+    TreeP superTree;
     struct _Class *next;
 };
 
-struct _Decl {
+struct _DeclParam {
     char* name;
     ClassP type;
+    char* typeName;
     TreeP expression;
-    struct _Decl *next;
+    int decl;
+    struct _DeclParam *next;
 };
 
 typedef union
@@ -90,6 +87,8 @@ typedef union
     char C;
     int I;
     TreeP pT;
+    Method pM;
+    
 } YYSTYPE;
 
 #define YYSTYPE YYSTYPE
