@@ -45,6 +45,7 @@ struct _Tree {
     short op;         /* etiquette de l'operateur courant */
     short nbChildren; /* nombre de sous-arbres */
     union {
+	ClassP idc;
 	char *str;      /* valeur de la feuille si op = Id ou STR */
 	int val;        /* valeur de la feuille si op = Cste */
 	DeclParamP declParams;
@@ -56,7 +57,7 @@ struct _Method {
     char* name;
     DeclParamP params;
     TreeP body;
-    ClassP return_type;
+    ClassP returnType;
     int override;
     struct _Method *next;
 };
