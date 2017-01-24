@@ -12,7 +12,7 @@ typedef unsigned char bool;
  * Certains tokens servent directement d'etiquette. Attention ici a ne pas
  * donner des valeurs identiques a celles des tokens.
  */
-enum {LIST, PLUS, MINUS, MULT, QUO, NE, EQ, LT, LE, GT, GE, CONCAT, ID, IDC, ITE, NEWC, ENVOI, CAST, SELEC, CONST, STRG, THI, SUP, RES, RET, AFFECT, ISBLOC, OVRD, EXT, BODY,DECLS};
+enum {LIST, PLUS, MINUS, MULT, QUO, NE, EQ, LT, LE, GT, GE, CONCAT, ID, IDC, ITE, NEWC, ENVOI, CAST, SELEC, CONST, STRG, THI, SUP, RES, RET, AFFECT, ISBLOC, OVRD, EXT, BODY, DECLS, LISTEXP};
 
 /* Codes d'erreurs */
 #define NO_ERROR	0
@@ -104,3 +104,23 @@ MethodP makeMethod(int override, char* name, DeclParamP params, TreeP body);
 DeclParamP makeDecl(char* name, char* class, TreeP expression);
 DeclParamP makeParam(char* name, char* class);
 void evalMain(TreeP tree);
+
+void pprintTree2(TreeP tree, char *op);
+void pprintTree1(TreeP tree, char *op);
+void pprintIf(TreeP tree);
+void pprintBloc(TreeP tree);
+void pprintAff(TreeP tree); 
+void pprintMes(TreeP tree);
+void pprintNew(TreeP tree);
+void pprintDec(TreeP tree);
+void pprintListExp(TreeP tree);
+void pprintList(TreeP tree);
+void pprintBody(TreeP tree);
+void pprintCast(TreeP tree);
+void pprint(TreeP tree);
+void pprintChamps (DeclParamP cc);
+void pprintParam (DeclParamP pp);
+void pprintExtends (TreeP e);
+void pprintMethods (MethodP mm);
+void pprintAllClasse (ClassP c);
+void pprintMain(TreeP tree);

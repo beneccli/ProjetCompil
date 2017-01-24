@@ -74,7 +74,7 @@ methodLOpt:                                                                     
 methodDecl: redifOpt DEF Id '('paramLOpt')' bodyAlt                                     {$$ = makeMethod($1,$3,$5,$7);}
 ;
 
-bodyAlt: ':' Idc AFF expr                                                                {$$ = makeTree(BODY,2,makeLeafStr(IDC,$2),makeTree(LIST,2,$4,makeTree(RET,0)));}
+bodyAlt: ':' Idc AFF expr                                           {$$ = makeTree(BODY,2,makeLeafStr(IDC,$2),makeTree(LIST,2,$4,makeTree(RET,0)));}
 | returnOpt IS block                                                                     {$$ = makeTree(BODY,2,$1,$3);}
 ;
 
@@ -95,7 +95,7 @@ block: '{' blockOpt '}'                                      {$$ =$2;}
 ;
 
 
-blockOpt: instrLOpt                                          {$$ = $1;}
+blockOpt: instrLOpt                                          {$$ = makeTree(ISBLOC,1,$1);} 
  | varDecl varLOpt IS instr instrLOpt                         {$1->next = $2;
                                                               TreeP t1 = makeLeafLVar(DECLS,$1);
                                                               TreeP t2 = makeTree(LIST,2,$4,$5);
@@ -141,8 +141,8 @@ exprLOpt:                                                    {$$ = NIL(Tree);}
 |exprL                                                       {$$ = $1;}
 ;
 
-exprL: expr                                                  {$$ = makeTree(LIST,2,$1,NIL(Tree));}
-| expr ',' exprL                                             {$$ = makeTree(LIST,2,$1,$3);}
+exprL: expr                                                  {$$ = makeTree(LISTEXP,1,$1);} 
+| expr ',' exprL                                             {$$ = makeTree(LISTEXP,2,$1,$3);}
 ;
 
 

@@ -6,3 +6,8 @@
 extern char *strdup(const char*);
 
 extern void setError(int code);
+
+
+DeclParamP verif_portee(classP dp) {
+  
+}

@@ -11,7 +11,7 @@ extern int yyparse();
 extern int yylineno;
 
 
-ClassP listeClass = NULL;
+ClassP listClass = NULL;
 
 /* Niveau de 'verbosite'.
  * Par defaut, n'imprime que le resultat et les messages d'erreur
@@ -170,9 +170,9 @@ void fillClass(ClassP class, DeclParamP params, TreeP extends, TreeP constructor
 ClassP makeClass(char *name) {
   ClassP class = NEW(1, Class);
   class->name = name;
-  if(listeClass != NULL)	  
-    class->next = listeClass;
-  listeClass = class;
+  if(listClass != NULL)	  
+    class->next = listClass;
+  listClass = class;
   return class;
 }
 
@@ -204,5 +204,5 @@ DeclParamP makeParam(char* name, char* class) {
 }
 	
 void evalMain(TreeP tree) {
- 
+   pprintMain(tree);
 }
