@@ -6,3 +6,4 @@
 extern char *strdup(const char*);
 
 extern void setError(int code);
+

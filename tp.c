@@ -10,9 +10,6 @@
 extern int yyparse();
 extern int yylineno;
 
-
-ClassP listeClass = NULL;
-
 /* Niveau de 'verbosite'.
  * Par defaut, n'imprime que le resultat et les messages d'erreur
  */
@@ -29,10 +26,11 @@ int errorCode = NO_ERROR;
 
 FILE *out; /* fichier de sortie pour le code engendre */
 
-
 int main(int argc, char **argv) {
   int fi;
   int i, res;
+
+  listClass = NULL;
 
   out = stdout;
   for(i = 1; i < argc; i++) {
@@ -170,9 +168,9 @@ void fillClass(ClassP class, DeclParamP params, TreeP extends, TreeP constructor
 ClassP makeClass(char *name) {
   ClassP class = NEW(1, Class);
   class->name = name;
-  if(listeClass != NULL)	  
-    class->next = listeClass;
-  listeClass = class;
+  if(listClass != NULL)
+    class->next = listClass;
+  listClass = class;
   return class;
 }
 
@@ -202,7 +200,34 @@ DeclParamP makeParam(char* name, char* class) {
   param->expression = NULL;
   return param;
 }
+
+ClassP getClass(char* name) {
+    ClassP class = listClass;
+    while(class != NULL) {
+	if(!strcmp(class->name, name))
+	    return class;
+	class = class->next;
+    }
+}
+
+void firstEvalTree(TreeP tree) {
+    
+}
+
+void firstEvalTreeMain() {
+    ClassP class = listClass;
+    while(class != NULL) {
+	if(getChild(class->superTree, 0)->op == EXT)
+	    class->super = getClass(getChild(class->superTree, 0)->u.str);
+	firstEvalTree(class->constructorBody);
+	firstEvalDeclParam(class->constructorParams); 
+	firstEvalMethod(class->methods);
+	firstEvalDeclParam(class->members); 
+	firstEvalTree(getChild(class->superTree, 1)->u.str);
+	class = class->next;	
+    }
+}
 	
 void evalMain(TreeP tree) {
- 
+    
 }
