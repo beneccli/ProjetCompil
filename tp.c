@@ -208,26 +208,9 @@ ClassP getClass(char* name) {
 	    return class;
 	class = class->next;
     }
-}
-
-void firstEvalTree(TreeP tree) {
-    
-}
-
-void firstEvalTreeMain() {
-    ClassP class = listClass;
-    while(class != NULL) {
-	if(getChild(class->superTree, 0)->op == EXT)
-	    class->super = getClass(getChild(class->superTree, 0)->u.str);
-	firstEvalTree(class->constructorBody);
-	firstEvalDeclParam(class->constructorParams); 
-	firstEvalMethod(class->methods);
-	firstEvalDeclParam(class->members); 
-	firstEvalTree(getChild(class->superTree, 1)->u.str);
-	class = class->next;	
-    }
+    return NULL;
 }
 	
 void evalMain(TreeP tree) {
-    
+    pprintMain(tree);
 }
