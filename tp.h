@@ -92,7 +92,7 @@ struct _env {
     char* name;
     ClassP type;
     struct _env *next;
-}
+};
 
 typedef union
 {
