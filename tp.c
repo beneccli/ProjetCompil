@@ -212,53 +212,56 @@ ClassP getClass(ClassP classEnv, char* name) {
 }
 
 void resolveTree(TreeP tree) {
-    switch (tree->op) {
-    case IDC:
-	tree->u.idc = getClass(listClass, tree->u.str);
-	break;
-    default:
-	int i = 0;
-        for(i = 0; i<tree->nbChildren; i++) {	    
-	    resolveTree(getChild(tree, i));
-	}			
+    if(tree != NULL) {
+        int i = 0;
+	switch (tree->op) {
+	case IDC:
+	    tree->idc = getClass(listClass, tree->u.str);
+	    break;
+	default:
+            for(i = 0; i<tree->nbChildren; i++) {		
+	        resolveTree(getChild(tree, i));
+	    }			
+	}
     }
 }
     
-void resolveDeclParam(DeclParamP _declParam) {
-    DeclParamP declParam = _declParam;	
-    while(declParam != NULL) {
-	declParam->type = getClass(declParam->typeName);
+void resolveDeclParam(DeclParamP declParam) {
+    if(declParam != NULL) {
+        resolveDeclParam(declParam->next);
+	declParam->type = getClass(listClass, declParam->typeName);
 	if(declParam->decl)
-	    resolveTree(expression);
+	    resolveTree(declParam->expression);
     }
 }
 
-void resolveMethod(MethodP _method) {
-    MethodP method = _method;	
-    while(method != NULL) {	
+void resolveMethod(MethodP method) {
+    if(method != NULL) {
+	resolveMethod(method->next);
 	if(method->body) {
 	    resolveTree(method->body);
-	    if(getChild(method->body, 0)->op == IDC)
-		method->returnType = getChild(method->body, 0)->idc;	    
+	    if(method->body && getChild(method->body, 0)->op == IDC)
+		method->returnType = getClass(listClass, getChild(method->body, 0)->u.str);	    
 	}
 	resolveDeclParam(method->params);
     }
 }
 
-void resolveTreeMain() {
-    ClassP class = listClass;
-    while(class != NULL) {
-	if(getChild(class->superTree, 0)->op == EXT)
+void resolveTreeMain(ClassP class) {
+    if(class != NULL) {
+	resolveTreeMain(class->next);
+	if(class->superTree && getChild(class->superTree, 0)->op == EXT)
 	    class->super = getClass(listClass, getChild(class->superTree, 0)->u.str);
 	resolveTree(class->constructorBody);
 	resolveDeclParam(class->constructorParams);
 	resolveMethod(class->methods);
 	resolveDeclParam(class->members);
-	resolveTree(getChild(class->superTree, 1)->u.str);
-	class = class->next;
+	if(class->superTree)
+	    resolveTree(getChild(class->superTree, 1));
     }
 }
 	
 void evalMain(TreeP tree) {
+    resolveTreeMain(listClass);
     pprintMain(tree);
 }

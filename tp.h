@@ -44,8 +44,8 @@ typedef struct _DeclParam DeclParam, *DeclParamP;
 struct _Tree {
     short op;         /* etiquette de l'operateur courant */
     short nbChildren; /* nombre de sous-arbres */
-    union {
-	ClassP idc;
+    ClassP idc;
+    union {	
 	char *str;      /* valeur de la feuille si op = Id ou STR */
 	int val;        /* valeur de la feuille si op = Cste */
 	DeclParamP declParams;
@@ -106,7 +106,11 @@ ClassP makeClass(char *name);
 MethodP makeMethod(int override, char* name, DeclParamP params, TreeP body);
 DeclParamP makeDecl(char* name, char* class, TreeP expression);
 DeclParamP makeParam(char* name, char* class);
-ClassP getClass(char* name);
+ClassP getClass(ClassP classEnv, char* name);
+void resolveTree(TreeP tree);
+void resolveDeclParam(DeclParamP _declParam);
+void resolveMethod(MethodP _method);
+void resolveTreeMain();
 void evalMain(TreeP tree);
 
 void pprintTree2(TreeP tree, char *op);
