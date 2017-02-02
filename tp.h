@@ -14,6 +14,8 @@ typedef unsigned char bool;
  */
 enum {LIST, PLUS, MINUS, MULT, QUO, NE, EQ, LT, LE, GT, GE, CONCAT, ID, IDC, ITE, NEWC, ENVOI, CAST, SELEC, CONST, STRG, THI, SUP, RES, RET, AFFECT, ISBLOC, OVRD, EXT, BODY, DECLS, LISTEXP};
 
+enum {ARG, GLOBAL, LOCAL};
+
 /* Codes d'erreurs */
 #define NO_ERROR	0
 #define USAGE_ERROR	1
@@ -39,6 +41,9 @@ typedef struct _Method Method, *MethodP;
 
 struct _DeclParam;
 typedef struct _DeclParam DeclParam, *DeclParamP;
+
+struct _env;
+typedef struct _env env, *envP;
 
 /* la structure d'un arbre (noeud ou feuille) */
 struct _Tree {
@@ -79,8 +84,15 @@ struct _DeclParam {
     char* typeName;
     TreeP expression;
     int decl;
-    struct _DeclParam *next;
+    struct _DeclParam *next;    
 };
+
+struct _env {
+    int scope;
+    char* name;
+    ClassP type;
+    struct _env *next;
+}
 
 typedef union
 {
