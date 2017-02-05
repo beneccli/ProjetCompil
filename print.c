@@ -83,7 +83,10 @@ void pprintDec(TreeP tree){
     printf("var ");
     printf("%s",tree->u.declParams->name);
     printf(" : ");
-    printf("%s",tree->u.declParams->typeName);
+    if(tree->u.declParams->type != NULL)
+	printf("%s",tree->u.declParams->type->name);
+    else
+	printf("Unknown");
     if (tree->u.declParams->expression != NULL) {
 	printf(" := ");
 	pprint(tree->u.declParams->expression);
@@ -102,6 +105,7 @@ void pprintListExp(TreeP tree){
 }
 
 void pprintList(TreeP tree){
+    printf("\n");
     if (getChild(tree, 1) != NULL) {
 	pprint(getChild(tree, 0));
 	pprint(getChild(tree, 1));
@@ -111,16 +115,10 @@ void pprintList(TreeP tree){
 
 
 void pprintBody(TreeP tree){
-    if (getChild(tree,1)->op != LIST){
-	if (getChild(tree,0) != NULL) {
-	    printf(" : ");
-	    pprint(getChild(tree,0));
-	}
+    if (getChild(tree,1)->op != LIST){	
 	printf(" is ");
 	pprint(getChild(tree,1));
     }else {
-	printf(" : ");
-	pprint(getChild(tree,0));
 	printf(" := ");
 	pprint(getChild(getChild(tree,1),0));
     }
@@ -155,7 +153,12 @@ void pprint(TreeP tree) {
   
     switch (tree->op) {
     case ID:    printf("%s", tree->u.str); break;
-    case IDC:    printf("%s", tree->u.str); break;
+    case IDC:
+	if(tree->idc != NULL)
+	    printf("%s", tree->idc->name);
+	else
+	    printf("Unknown");
+	break;
     case CONST:   printf("%d", tree->u.val); break;
     case STRG:   printf("%s", tree->u.str); break;
     case EQ:    pprintTree2(tree, " = "); break;
@@ -204,7 +207,10 @@ void pprintChamps (DeclParamP cc){
 	pprintChamps(c->next);
 	printf("\n");
 	printf("var ");
-	printf("%s : %s ",c->name,c->typeName);
+	if(c->type != NULL)
+	    printf("%s : %s ",c->name, c->type->name);
+	else
+	    printf("%s : Unknown ",c->name);
 	if (c->expression != NULL) {
 	    printf(" := ");
 	    pprint(c->expression);
@@ -220,8 +226,11 @@ void pprintParam (DeclParamP pp){
     if (p!=NULL){
 	pprintParam(p->next);
 	if(p->next != NULL)
-	    printf(", ");
-	printf("%s : %s",p->name, p->typeName);
+	    printf(", ");	
+	if(p->type != NULL)
+	    printf("%s : %s",p->name, p->type->name);
+	else
+	    printf("%s : Unknown",p->name);
     }
   
 }
@@ -229,7 +238,7 @@ void pprintParam (DeclParamP pp){
 /* Affichage d'un extends */
 void pprintExtends (TreeP e){
     if (e!=NULL && getChild(e, 0)->op == EXT){
-	printf("extends %s(",getChild(e,0)->u.str);
+	printf("(");
 	pprint(getChild(e,1));
 	printf(")");
     }
@@ -250,6 +259,9 @@ void pprintMethods (MethodP mm){
   	printf("%s(",m->name);
     	pprintParam(m->params);
   	printf(") ");
+	if(m->returnType != NULL) {
+	    printf(" : %s", m->returnType->name);
+	}
   	pprint(m->body);
     }
 }
@@ -264,7 +276,10 @@ void pprintAllClasse (ClassP c){
 	printf("%s(",c->name);
 	pprintParam(c->constructorParams);
 	printf(") ");
-	pprintExtends(c->superTree);
+	if (c->super != NULL) {
+	    printf("extends %s",c->super->name);
+	    pprintExtends(c->superTree);
+	}
 	if(c->constructorBody != NULL) pprint(c->constructorBody);
 	printf(" is { ");
 	pprintChamps(c->members);

@@ -58,15 +58,6 @@ struct _Tree {
     } u;
 };
 
-struct _Method {
-    char* name;
-    DeclParamP params;
-    TreeP body;
-    ClassP returnType;
-    int override;
-    struct _Method *next;
-};
-
 struct _Class {
     char* name;
     TreeP constructorBody;
@@ -76,6 +67,15 @@ struct _Class {
     struct _Class *super;
     TreeP superTree;
     struct _Class *next;
+};
+
+struct _Method {
+    char* name;
+    DeclParamP params;
+    TreeP body;
+    ClassP returnType;
+    int override;
+    struct _Method *next;
 };
 
 struct _DeclParam {
@@ -118,11 +118,14 @@ ClassP makeClass(char *name);
 MethodP makeMethod(int override, char* name, DeclParamP params, TreeP body);
 DeclParamP makeDecl(char* name, char* class, TreeP expression);
 DeclParamP makeParam(char* name, char* class);
+
 ClassP getClass(ClassP classEnv, char* name);
+
 void resolveTree(TreeP tree);
 void resolveDeclParam(DeclParamP _declParam);
 void resolveMethod(MethodP _method);
 void resolveTreeMain();
+
 void evalMain(TreeP tree);
 
 void pprintTree2(TreeP tree, char *op);

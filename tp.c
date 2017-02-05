@@ -107,7 +107,8 @@ TreeP makeNode(int nbChildren, short op) {
 TreeP makeTree(short op, int nbChildren, ...) {
   va_list args;
   int i;
-  TreeP tree = makeNode(nbChildren, op); 
+  TreeP tree = makeNode(nbChildren, op);
+  tree->idc = NULL;
   va_start(args, nbChildren);
   for (i = 0; i < nbChildren; i++) { 
     tree->u.children[i] = va_arg(args, TreeP);
@@ -168,6 +169,13 @@ void fillClass(ClassP class, DeclParamP params, TreeP extends, TreeP constructor
 ClassP makeClass(char *name) {
   ClassP class = NEW(1, Class);
   class->name = name;
+  class->constructorBody = NULL;
+  class->constructorParams = NULL;
+  class->methods = NULL;
+  class->members = NULL;
+  class->super = NULL;
+  class->superTree = NULL;
+  class->next = NULL;
   if(listClass != NULL)
     class->next = listClass;
   listClass = class;
@@ -176,6 +184,8 @@ ClassP makeClass(char *name) {
 
 MethodP makeMethod(int override, char* name, DeclParamP params, TreeP body) {
   MethodP method = NEW(1, Method);
+  method->returnType = NULL;
+  method->next = NULL;
   method->override = override;
   method->name = name;
   method->params = params;
@@ -185,6 +195,8 @@ MethodP makeMethod(int override, char* name, DeclParamP params, TreeP body) {
 
 DeclParamP makeDecl(char* name, char* class, TreeP expression) {
   DeclParamP decl = NEW(1, DeclParam);
+  decl->type = NULL;
+  decl->next = NULL;
   decl->decl = 1;
   decl->name = name;
   decl->typeName = class;
@@ -194,6 +206,8 @@ DeclParamP makeDecl(char* name, char* class, TreeP expression) {
 
 DeclParamP makeParam(char* name, char* class) {
   DeclParamP param = NEW(1, DeclParam);
+  param->type = NULL;
+  param->next = NULL;
   param->decl = 0;
   param->name = name;
   param->typeName = class;
@@ -218,6 +232,9 @@ void resolveTree(TreeP tree) {
 	case IDC:
 	    tree->idc = getClass(listClass, tree->u.str);
 	    break;
+	case DECLS:
+	    tree->u.declParams->type = getClass(listClass, tree->u.declParams->typeName);
+	    resolveTree(tree->u.declParams->expression);
 	default:
             for(i = 0; i<tree->nbChildren; i++) {		
 	        resolveTree(getChild(tree, i));
@@ -228,29 +245,29 @@ void resolveTree(TreeP tree) {
     
 void resolveDeclParam(DeclParamP declParam) {
     if(declParam != NULL) {
-        resolveDeclParam(declParam->next);
 	declParam->type = getClass(listClass, declParam->typeName);
 	if(declParam->decl)
 	    resolveTree(declParam->expression);
+	resolveDeclParam(declParam->next);
     }
 }
 
 void resolveMethod(MethodP method) {
     if(method != NULL) {
-	resolveMethod(method->next);
 	if(method->body) {
 	    resolveTree(method->body);
 	    if(method->body && getChild(method->body, 0)->op == IDC)
 		method->returnType = getClass(listClass, getChild(method->body, 0)->u.str);	    
 	}
 	resolveDeclParam(method->params);
+	resolveMethod(method->next);
     }
 }
 
 void resolveTreeMain(ClassP class) {
     if(class != NULL) {
 	resolveTreeMain(class->next);
-	if(class->superTree && getChild(class->superTree, 0)->op == EXT)
+	if(class->superTree && class->superTree->op == EXT && getChild(class->superTree, 0)->op == IDC)
 	    class->super = getClass(listClass, getChild(class->superTree, 0)->u.str);
 	resolveTree(class->constructorBody);
 	resolveDeclParam(class->constructorParams);
@@ -262,6 +279,9 @@ void resolveTreeMain(ClassP class) {
 }
 	
 void evalMain(TreeP tree) {
+    makeClass("Integer");
+    makeClass("String");
     resolveTreeMain(listClass);
+    resolveTree(tree);
     pprintMain(tree);
 }
