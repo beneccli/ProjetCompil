@@ -235,7 +235,7 @@ void pprintParam (DeclParamP pp){
 
 /* Affichage d'un extends */
 void pprintExtends (TreeP e){
-    if (e!=NULL && getChild(e, 0)->op == EXT){
+    if (e!=NULL && getChild(e, 0)->op == IDC){
 	printf("(");
 	pprint(getChild(e,1));
 	printf(")");
