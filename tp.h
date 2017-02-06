@@ -50,6 +50,7 @@ struct _Tree {
     short op;         /* etiquette de l'operateur courant */
     short nbChildren; /* nombre de sous-arbres */
     ClassP idc;
+    int isCallMethod;
     union {	
 	char *str;      /* valeur de la feuille si op = Id ou STR */
 	int val;        /* valeur de la feuille si op = Cste */
@@ -110,6 +111,7 @@ typedef union
 ClassP listClass;
 
 TreeP makeLeafStr(short op, char *str);       
+TreeP makeLeafCallMethod(char *str);
 TreeP makeLeafInt(short op, int val);	      
 TreeP makeTree(short op, int nbChildren, ...);
 TreeP makeLeafLVar(short op, DeclParamP lvar);

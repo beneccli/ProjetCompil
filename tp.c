@@ -96,7 +96,9 @@ void yyerror(char *ignore) {
 /* Tronc commun pour la construction d'arbre */
 TreeP makeNode(int nbChildren, short op) {
   TreeP tree = NEW(1, Tree);
+  tree->isCallMethod = 0;
   tree->op = op;
+  tree->idc = NULL;
   tree->nbChildren = nbChildren;
   tree->u.children = nbChildren > 0 ? NEW(nbChildren, TreeP) : NIL(TreeP);
   return(tree);
@@ -109,6 +111,7 @@ TreeP makeTree(short op, int nbChildren, ...) {
   int i;
   TreeP tree = makeNode(nbChildren, op);
   tree->idc = NULL;
+  tree->isCallMethod = 0;
   va_start(args, nbChildren);
   for (i = 0; i < nbChildren; i++) { 
     tree->u.children[i] = va_arg(args, TreeP);
@@ -144,6 +147,13 @@ TreeP makeLeafStr(short op, char *str) {
   return tree;
 }
 
+/* Constructeur de feuille dont la valeur est une chaine de caracteres */
+TreeP makeLeafCallMethod(char *str) {
+  TreeP tree = makeNode(0, ID);
+  tree->u.str = str;
+  tree->isCallMethod = 1;
+  return tree;
+}
 
 /* Constructeur de feuille dont la valeur est un entier */
 TreeP makeLeafInt(short op, int val) {

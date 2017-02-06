@@ -134,7 +134,7 @@ expr: expr RelOp expr                                        {$$ = makeTree($2,2
 | '(' expr ')'		                                     {$$ = $2;}
 ;
 
-message: expr DOT Id '(' exprLOpt ')'                        {$$ = makeTree(ENVOI,3,$1,makeLeafStr(ID,$3),$5);}
+message: expr DOT Id '(' exprLOpt ')'                        {$$ = makeTree(ENVOI,3,$1,makeLeafCallMethod($3),$5);}
 ;
 
 exprLOpt:                                                    {$$ = NIL(Tree);}
