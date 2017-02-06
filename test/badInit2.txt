@@ -1,0 +1,18 @@
+class A0(ic: Integer) { i := ic; "AO::A0".println(); } is {
+  var i: Integer;
+  var s: String :=  "A0-initialisation".println();
+  def f(z : Integer) : Integer := x + y + i
+  def g() : Integer := i
+}
+class A(xc: Integer) extends A0(2*xc) { var d: Integer; is x := xc; "A::A".println(); } is {
+  var x: Integer;
+  var y: Integer := 12;
+  var s: String := "A-initialisation".println();
+  override def f(k : Integer) : Integer := x + y + i
+  override def g() : Integer := y + i
+}
+{
+ var a : A := new A(5);
+ is
+ a.f().toString().println();
+}

@@ -79,16 +79,18 @@ void pprintNew(TreeP tree){
   printf(")");
 }
 
-void pprintDec(TreeP tree){
+void pprintDec(DeclParamP param){
   printf("var ");
-  printf("%s",tree->u.declParams->name);
+  printf("%s",param->name);
   printf(" : ");
-  printf("%s",tree->u.declParams->typeName);
-  if (tree->u.declParams->expression != NULL) {
+  printf("%s",param->typeName);
+  if (param->expression != NULL) {
     printf(" := ");
-    pprint(tree->u.declParams->expression);
+    pprint(param->expression);
   }
   printf(";\n");
+  if (param->next != NULL)
+    pprintDec(param->next);
 }
 
 void pprintListExp(TreeP tree){
@@ -141,7 +143,7 @@ int nbrParentheses = 0;
 void pprint(TreeP tree) {
   if (! verbose ) return;
   if (tree == NIL(Tree)) { 
-    printf("Unknown"); return;
+    return;
   }
   if(debug){
     ++nbrParentheses;
@@ -176,7 +178,7 @@ void pprint(TreeP tree) {
   case BODY: pprintBody(tree); break;
   case LISTEXP: pprintListExp(tree); break;
   case LIST: pprintList(tree);break;
-  case DECLS: pprintDec(tree); break;
+  case DECLS: pprintDec(tree->u.declParams); break;
   case SELEC:  pprintTree2(tree, "."); break;
   case ENVOI: pprintMes(tree); break;
   case NEWC:  pprintNew(tree); break;

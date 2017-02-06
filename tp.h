@@ -14,6 +14,8 @@ typedef unsigned char bool;
  */
 enum {LIST, PLUS, MINUS, MULT, QUO, NE, EQ, LT, LE, GT, GE, CONCAT, ID, IDC, ITE, NEWC, ENVOI, CAST, SELEC, CONST, STRG, THI, SUP, RES, RET, AFFECT, ISBLOC, OVRD, EXT, BODY, DECLS, LISTEXP};
 
+enum {ARG, GLOBAL, LOCAL};
+
 /* Codes d'erreurs */
 #define NO_ERROR	0
 #define USAGE_ERROR	1
@@ -40,11 +42,15 @@ typedef struct _Method Method, *MethodP;
 struct _DeclParam;
 typedef struct _DeclParam DeclParam, *DeclParamP;
 
+struct _env;
+typedef struct _Env Env, *EnvP;
+
 /* la structure d'un arbre (noeud ou feuille) */
 struct _Tree {
     short op;         /* etiquette de l'operateur courant */
     short nbChildren; /* nombre de sous-arbres */
-    union {
+    ClassP idc;
+    union {	
 	char *str;      /* valeur de la feuille si op = Id ou STR */
 	int val;        /* valeur de la feuille si op = Cste */
 	DeclParamP declParams;
@@ -56,7 +62,8 @@ struct _Method {
     char* name;
     DeclParamP params;
     TreeP body;
-    ClassP return_type;
+    EnvP env;
+    ClassP returnType;
     int override;
     struct _Method *next;
 };
@@ -66,6 +73,7 @@ struct _Class {
     TreeP constructorBody;
     DeclParamP constructorParams;
     MethodP methods;
+    EnvP env;
     DeclParamP members;
     struct _Class *super;
     TreeP superTree;
@@ -78,7 +86,14 @@ struct _DeclParam {
     char* typeName;
     TreeP expression;
     int decl;
-    struct _DeclParam *next;
+    struct _DeclParam *next;    
+};
+
+struct _Env {
+    int scope;
+    char* name;
+    ClassP type;
+    struct _Env *next;
 };
 
 typedef union
@@ -92,6 +107,7 @@ typedef union
     DeclParamP pDP;
 } YYSTYPE;
 
+
 #define YYSTYPE YYSTYPE
 
 TreeP makeLeafStr(short op, char *str);       
@@ -103,8 +119,11 @@ ClassP makeClass(char *name);
 MethodP makeMethod(int override, char* name, DeclParamP params, TreeP body);
 DeclParamP makeDecl(char* name, char* class, TreeP expression);
 DeclParamP makeParam(char* name, char* class);
+ClassP getClass(ClassP cl,char* name);
+MethodP getMethod(ClassP cl,char* name);
 void evalMain(TreeP tree);
 
+/*Print*/
 void pprintTree2(TreeP tree, char *op);
 void pprintTree1(TreeP tree, char *op);
 void pprintIf(TreeP tree);
@@ -112,7 +131,7 @@ void pprintBloc(TreeP tree);
 void pprintAff(TreeP tree); 
 void pprintMes(TreeP tree);
 void pprintNew(TreeP tree);
-void pprintDec(TreeP tree);
+void pprintDec(DeclParamP param);
 void pprintListExp(TreeP tree);
 void pprintList(TreeP tree);
 void pprintBody(TreeP tree);
@@ -124,3 +143,17 @@ void pprintExtends (TreeP e);
 void pprintMethods (MethodP mm);
 void pprintAllClasse (ClassP c);
 void pprintMain(TreeP tree);
+
+/*Verif*/
+bool circuit_class(ClassP lc);
+bool same_params (DeclParamP p1, DeclParamP p2);
+bool override_method(MethodP m, MethodP r);
+MethodP return_override_methods(MethodP methods);
+bool verif_override(ClassP lc);
+
+void print_env(EnvP env);
+void print_class(ClassP lc); 
+bool verif_portee (ClassP lc);
+void copy_param(DeclParamP vars,ClassP lc);
+void copy_env(EnvP super, ClassP lc);
+void fill_env(ClassP lc);

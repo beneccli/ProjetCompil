@@ -72,6 +72,8 @@ int main(int argc, char **argv) {
 
   /* redirige l'entree standard sur le fichier... */
   close(0); dup(fi); close(fi);
+  makeClass("Integer");
+  makeClass("String");
 
   res = yyparse();
   if (out != NIL(FILE) && out != stdout) fclose(out);
@@ -202,7 +204,82 @@ DeclParamP makeParam(char* name, char* class) {
   param->expression = NULL;
   return param;
 }
+
+
+MethodP getMethod(ClassP cl,char* name) {
+    MethodP method = cl->methods;
+    while(method != NULL) {
+	if(!strcmp(method->name, name))
+	    return method;
+	method = method->next;
+    }
+    return NULL;
+}
+
+ClassP getClass(ClassP classEnv, char* name) {
+    ClassP class = classEnv;
+    while(class != NULL) {
+	if(!strcmp(class->name, name))
+	    return class;
+	class = class->next;
+    }
+    return NULL;
+}
+
+void resolveTree(TreeP tree) {
+    if(tree != NULL) {
+        int i = 0;
+	switch (tree->op) {
+	case IDC:
+	    tree->idc = getClass(listClass, tree->u.str);
+	    break;
+	default:
+            for(i = 0; i<tree->nbChildren; i++) {		
+	        resolveTree(getChild(tree, i));
+	    }			
+	}
+    }
+}
+    
+void resolveDeclParam(DeclParamP declParam) {
+    if(declParam != NULL) {
+        resolveDeclParam(declParam->next);
+	declParam->type = getClass(listClass, declParam->typeName);
+	if(declParam->decl)
+	    resolveTree(declParam->expression);
+    }
+}
+
+void resolveMethod(MethodP method) {
+    if(method != NULL) {
+	resolveMethod(method->next);
+	if(method->body) {
+	    resolveTree(method->body);
+	    if(method->body && getChild(method->body, 0)->op == IDC)
+		method->returnType = getClass(listClass, getChild(method->body, 0)->u.str);	    
+	}
+	resolveDeclParam(method->params);
+    }
+}
+
+void resolveTreeMain(ClassP class) {
+    if(class != NULL) {
+	resolveTreeMain(class->next);
+	if(class->superTree)
+	    class->super = getClass(listClass, getChild(class->superTree, 0)->u.str);
+	resolveTree(class->constructorBody);
+	resolveDeclParam(class->constructorParams);
+	resolveMethod(class->methods);
+	resolveDeclParam(class->members);
+	if(class->superTree)
+	    resolveTree(getChild(class->superTree, 1));
+    }
+}
 	
 void evalMain(TreeP tree) {
+   resolveTreeMain(listClass);
    pprintMain(tree);
+   printf("%d\n",verif_override(listClass));
+   printf("%d\n",circuit_class(listClass));
+   verif_portee(listClass);
 }
