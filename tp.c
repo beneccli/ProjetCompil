@@ -70,6 +70,8 @@ int main(int argc, char **argv) {
 
   /* redirige l'entree standard sur le fichier... */
   close(0); dup(fi); close(fi);
+  makeClass("Integer");
+  makeClass("String");
 
   res = yyparse();
   if (out != NIL(FILE) && out != stdout) fclose(out);
@@ -225,6 +227,16 @@ DeclParamP makeParam(char* name, char* class) {
   return param;
 }
 
+MethodP getMethod(ClassP cl,char* name) {
+    MethodP method = cl->methods;
+    while(method != NULL) {
+	if(!strcmp(method->name, name))
+	    return method;
+	method = method->next;
+    }
+    return NULL;
+}
+
 ClassP getClass(ClassP classEnv, char* name) {
     ClassP class = classEnv;
     while(class != NULL) {
@@ -289,9 +301,10 @@ void resolveTreeMain(ClassP class) {
 }
 	
 void evalMain(TreeP tree) {
-    makeClass("Integer");
-    makeClass("String");
     resolveTreeMain(listClass);
     resolveTree(tree);
     pprintMain(tree);
+    printf("%d\n",verif_override(listClass));
+    printf("%d\n",circuit_class(listClass));
+    verif_portee(listClass);
 }

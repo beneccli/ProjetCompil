@@ -43,7 +43,7 @@ struct _DeclParam;
 typedef struct _DeclParam DeclParam, *DeclParamP;
 
 struct _env;
-typedef struct _env env, *envP;
+typedef struct _Env Env, *EnvP;
 
 /* la structure d'un arbre (noeud ou feuille) */
 struct _Tree {
@@ -59,24 +59,26 @@ struct _Tree {
     } u;
 };
 
+struct _Method {
+    char* name;
+    DeclParamP params;
+    TreeP body;
+    EnvP env;
+    ClassP returnType;
+    int override;
+    struct _Method *next;
+};
+
 struct _Class {
     char* name;
     TreeP constructorBody;
     DeclParamP constructorParams;
     MethodP methods;
+    EnvP env;
     DeclParamP members;
     struct _Class *super;
     TreeP superTree;
     struct _Class *next;
-};
-
-struct _Method {
-    char* name;
-    DeclParamP params;
-    TreeP body;
-    ClassP returnType;
-    int override;
-    struct _Method *next;
 };
 
 struct _DeclParam {
@@ -88,11 +90,11 @@ struct _DeclParam {
     struct _DeclParam *next;    
 };
 
-struct _env {
+struct _Env {
     int scope;
     char* name;
     ClassP type;
-    struct _env *next;
+    struct _Env *next;
 };
 
 typedef union
@@ -105,6 +107,7 @@ typedef union
     ClassP pC;
     DeclParamP pDP;
 } YYSTYPE;
+
 
 #define YYSTYPE YYSTYPE
 
@@ -122,6 +125,7 @@ DeclParamP makeDecl(char* name, char* class, TreeP expression);
 DeclParamP makeParam(char* name, char* class);
 
 ClassP getClass(ClassP classEnv, char* name);
+MethodP getMethod(ClassP cl,char* name);
 
 void resolveTree(TreeP tree);
 void resolveDeclParam(DeclParamP _declParam);
@@ -130,6 +134,7 @@ void resolveTreeMain();
 
 void evalMain(TreeP tree);
 
+/*Print*/
 void pprintTree2(TreeP tree, char *op);
 void pprintTree1(TreeP tree, char *op);
 void pprintIf(TreeP tree);
@@ -149,3 +154,17 @@ void pprintExtends (TreeP e);
 void pprintMethods (MethodP mm);
 void pprintAllClasse (ClassP c);
 void pprintMain(TreeP tree);
+
+/*Verif*/
+bool circuit_class(ClassP lc);
+bool same_params (DeclParamP p1, DeclParamP p2);
+bool override_method(MethodP m, MethodP r);
+MethodP return_override_methods(MethodP methods);
+bool verif_override(ClassP lc);
+
+void print_env(EnvP env);
+void print_class(ClassP lc); 
+bool verif_portee (ClassP lc);
+void copy_param(DeclParamP vars,ClassP lc);
+void copy_env(EnvP super, ClassP lc);
+void fill_env(ClassP lc);

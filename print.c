@@ -139,7 +139,7 @@ int nbrParentheses = 0;
 void pprint(TreeP tree) {
     if (! verbose ) return;
     if (tree == NIL(Tree)) { 
-	printf("Unknown"); return;
+	return;
     }
     if(debug){
 	++nbrParentheses;
@@ -191,8 +191,6 @@ void pprint(TreeP tree) {
 	/* On signale le probleme mais on ne quitte pas le programme pour autant */
 	fprintf(stderr, "Erreur! pprint : etiquette d'operator inconnue: %d\n", 
 		tree->op);
-
-	//setError(UNEXPECTED);
     }
     if(debug){
 	printf(")");
