@@ -13,7 +13,7 @@ extern void setError(int code);
 bool circuit_class(ClassP lc) {
   if (lc != NULL) {
     if(!isupper(lc->name[0]))
-	return FALSE;
+      return FALSE;
     if (getClass(lc->next,lc->name) != NULL)
       return FALSE;
     if (lc->superTree != NULL)
@@ -87,98 +87,149 @@ bool verif_override(ClassP lc) {
 }
 
 /*Portee*/
-void print_env (EnvP env) {
-  if (env != NULL) {
-    printf("%s \n",env->name);
-    print_env(env->next);
+EnvP copyEnv(EnvP e) {
+  EnvP itEnv = e;
+  EnvP startNewEnv = NULL;
+  EnvP env = NULL;
+  EnvP envA = NULL;
+  while(itEnv != NULL) {
+    envA = env;
+    env = NEW(1, Env);
+    env->isMethod = itEnv->isMethod;
+    env->name = itEnv->name;
+    env->type = itEnv->type;
+    env->next = NULL;
+
+    if(startNewEnv == NULL)
+      startNewEnv = env;
+    else {
+      envA->next = env;
+      env = envA->next;
+    }
+
+    itEnv = itEnv->next;
   }
+  return startNewEnv;
 }
 
-void print_class(ClassP lc) {
-  if (lc != NULL) {
-    print_class(lc->next);
-    printf("Classe %s:\n",lc->name);
-    print_env(lc->env);
-  }
+EnvP concatEnv(EnvP e1, EnvP e2) {
+  if(e1 == NULL)
+    return e2;
+  EnvP itEnv = e1;
+  while(itEnv->next != NULL)
+    itEnv = itEnv->next;
+  itEnv->next = e2;
+  return e1;
 }
 
-
-bool verif_portee (ClassP lc) {
-  fill_env(lc);
-  print_class(lc);
+bool verif_scope(ClassP c, TreeP main) {
+  envSClass(c);
+  envSTree(main);
+  
   return TRUE;
 }
 
-void copy_param(DeclParamP vars,ClassP lc) {
-  if (vars != NULL) {
-    EnvP e =  NEW(1, Env);  
-    e->name = vars->name;
-    e->type = vars->type;
-    if(lc->env != NULL)	  
-      e->next = lc->env;
-    lc->env = e;
-    copy_param(vars->next,lc);
+EnvP envSClass(ClassP c) {
+  if(c != NULL) {
+    envSTree(c->constructorBody);
+    envSDeclParam(c->constructorParams);
+    envSTree(c->superTree);
+
+    c->envS = concatEnv(copyEnv(envSDeclParam(c->members)),
+			copyEnv(envSMethod(c->methods)));
+
+    envSClass(c->next);
+
+    return c->envS;
   }
+  return NULL;
 }
 
-void copy_env(EnvP super, ClassP lc) {
-  if (super != NULL) {
-    EnvP e = NEW(1, Env);
-    e->name = super->name;
-    e->type = super->type;
-    if(lc->env != NULL)	  
-      e->next = lc->env;
-    lc->env = e;
-    copy_env(super->next,lc);
+EnvP envSDeclParam(DeclParamP d) {
+  if(d != NULL) {
+    envSTree(d->expression);
+    
+    EnvP env = NEW(1, Env);
+    env->isMethod = 0;
+    env->name = d->name;
+    env->type = d->type;
+    env->next = NULL;
+    
+    d->envS =  concatEnv(env, copyEnv(envSDeclParam(d->next)));
+
+    return d->envS;
   }
+  return NULL;
 }
 
-void copy_expr(TreeP expr, ClassP lc) {
-  if (expr != NULL) {
-    int i = 0;
-    if (expr->op == ID) {
-      EnvP e = NEW(1,Env);
-      e->name = expr->u.str;
-      if(lc->env != NULL)	  
-        e->next = lc->env;
-      lc->env = e;
-    }
-    else if (expr->op == DECLS) {
-      DeclParamP d = expr->u.declParams;
-      while (d != NULL) {
-        EnvP e = NEW(1,Env);
-        e->name = d->name;
-        e->type = d->type;
-        if(lc->env != NULL)	  
-          e->next = lc->env;
-        lc->env = e;
-        d = d->next;
-      }
-    }
-    for (i = 0; i < expr->nbChildren ; i++)
-      copy_expr(getChild(expr,i),lc);
-  } 
+EnvP envSMethod(MethodP m) {
+  if(m != NULL) {
+    envSDeclParam(m->params);
+    envSTree(m->body);
+    
+    EnvP env = NEW(1, Env);
+    env->isMethod = 1;
+    env->name = m->name;
+    env->type = m->returnType;
+    env->next = NULL;
+    
+    m->envS =  concatEnv(env, copyEnv(envSMethod(m->next)));
+
+    return m->envS;
+  }
+  return NULL;
 }
 
-void fill_env(ClassP lc) {
-  if (lc != NULL) {
-    fill_env(lc->next);
-    if (lc->super != NULL) {
-      copy_env(lc->super->env,lc);
-      copy_expr(getChild(lc->superTree,1),lc);
-    }
-    copy_param(lc->constructorParams, lc);
-    copy_param(lc->members, lc);
-    copy_expr(lc->constructorBody,lc);
-    MethodP tmp = lc->methods;
-    while(tmp != NULL) {
-      EnvP e = NEW(1,Env);
-      e->name = tmp->name;
-      e->type = tmp->returnType;
-      if(lc->env != NULL)	  
-        e->next = lc->env;
-      lc->env = e;
-      tmp = tmp->next;
+EnvP envSTree(TreeP t) {
+  int i;
+  if(t != NULL) {
+    switch (t->op) {
+    case DECLS:
+      t->envS = copyEnv(envSDeclParam(t->u.declParams));
+      return t->envS;
+    case ID:
+    case IDC:
+    case CONST:
+    case STRG:
+    case ENVOI:
+      return NULL;      
+    case EQ:
+    case NE:
+    case GT:
+    case GE:
+    case LT:
+    case LE:
+    case PLUS:
+    case MINUS:
+    case MULT:
+    case QUO:
+    case ITE:
+    case CONCAT:
+    case THI:
+    case AFFECT:
+    case BODY:
+    case LISTEXP:
+    case LIST:
+    case SELEC:
+    case NEWC:
+    case CAST:
+    case RET:
+    case RES:
+    case SUP:
+    case EXT:
+    case OVRD:
+      t->envS = copyEnv(envSTree(getChild(t, 0)));
+      for(i = 1; i<t->nbChildren; t++)
+	t->envS = concatEnv(t->envS, copyEnv(envSTree(getChild(t, i))));   
+      return t->envS;
+    case ISBLOC:
+      t->envS = copyEnv(envSTree(getChild(t, 0)));
+      for(i = 1; i<t->nbChildren; t++)
+	t->envS = concatEnv(t->envS, copyEnv(envSTree(getChild(t, i))));
+      return NULL;
+    default:
+      return NULL;      
     }
   }
+  return NULL;
 }

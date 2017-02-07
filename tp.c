@@ -46,10 +46,10 @@ int main(int argc, char **argv) {
 	fprintf(stderr, "Appel: tp -v -e -d -o file.out programme.txt\n");
 	exit(USAGE_ERROR);
       case'o':
-	  if ((out= fopen(argv[++i], "w")) == NULL) {
-	    fprintf(stderr, "erreur: Cannot open %s\n", argv[i]);
-	    exit(USAGE_ERROR);
-	  }
+	if ((out= fopen(argv[++i], "w")) == NULL) {
+	  fprintf(stderr, "erreur: Cannot open %s\n", argv[i]);
+	  exit(USAGE_ERROR);
+	}
 	break;
       default:
 	fprintf(stderr, "Option inconnue: %c\n", argv[i][1]);
@@ -101,6 +101,8 @@ TreeP makeNode(int nbChildren, short op) {
   tree->isCallMethod = 0;
   tree->op = op;
   tree->idc = NULL;
+  tree->env = NULL;
+  tree->envS = NULL;
   tree->nbChildren = nbChildren;
   tree->u.children = nbChildren > 0 ? NEW(nbChildren, TreeP) : NIL(TreeP);
   return(tree);
@@ -113,6 +115,8 @@ TreeP makeTree(short op, int nbChildren, ...) {
   int i;
   TreeP tree = makeNode(nbChildren, op);
   tree->idc = NULL;
+  tree->env = NULL;
+  tree->envS = NULL;
   tree->isCallMethod = 0;
   va_start(args, nbChildren);
   for (i = 0; i < nbChildren; i++) { 
@@ -188,6 +192,8 @@ ClassP makeClass(char *name) {
   class->super = NULL;
   class->superTree = NULL;
   class->next = NULL;
+  class->env = NULL;
+  class->envS = NULL;
   if(listClass != NULL)
     class->next = listClass;
   listClass = class;
@@ -198,6 +204,8 @@ MethodP makeMethod(int override, char* name, DeclParamP params, TreeP body) {
   MethodP method = NEW(1, Method);
   method->returnType = NULL;
   method->next = NULL;
+  method->env = NULL;
+  method->envS = NULL;
   method->override = override;
   method->name = name;
   method->params = params;
@@ -209,6 +217,8 @@ DeclParamP makeDecl(char* name, char* class, TreeP expression) {
   DeclParamP decl = NEW(1, DeclParam);
   decl->type = NULL;
   decl->next = NULL;
+  decl->env = NULL;
+  decl->envS = NULL;
   decl->decl = 1;
   decl->name = name;
   decl->typeName = class;
@@ -220,6 +230,8 @@ DeclParamP makeParam(char* name, char* class) {
   DeclParamP param = NEW(1, DeclParam);
   param->type = NULL;
   param->next = NULL;
+  param->env = NULL;
+  param->envS = NULL;
   param->decl = 0;
   param->name = name;
   param->typeName = class;
@@ -228,83 +240,83 @@ DeclParamP makeParam(char* name, char* class) {
 }
 
 MethodP getMethod(ClassP cl,char* name) {
-    MethodP method = cl->methods;
-    while(method != NULL) {
-	if(!strcmp(method->name, name))
-	    return method;
-	method = method->next;
-    }
-    return NULL;
+  MethodP method = cl->methods;
+  while(method != NULL) {
+    if(!strcmp(method->name, name))
+      return method;
+    method = method->next;
+  }
+  return NULL;
 }
 
 ClassP getClass(ClassP classEnv, char* name) {
-    ClassP class = classEnv;
-    while(class != NULL) {
-	if(!strcmp(class->name, name))
-	    return class;
-	class = class->next;
-    }
-    return NULL;
+  ClassP class = classEnv;
+  while(class != NULL) {
+    if(!strcmp(class->name, name))
+      return class;
+    class = class->next;
+  }
+  return NULL;
 }
 
 void resolveTree(TreeP tree) {
-    if(tree != NULL) {
-        int i = 0;
-	switch (tree->op) {
-	case IDC:
-	    tree->idc = getClass(listClass, tree->u.str);
-	    break;
-	case DECLS:
-	    tree->u.declParams->type = getClass(listClass, tree->u.declParams->typeName);
-	    resolveTree(tree->u.declParams->expression);
-	default:
-            for(i = 0; i<tree->nbChildren; i++) {		
-	        resolveTree(getChild(tree, i));
-	    }			
-	}
+  if(tree != NULL) {
+    int i = 0;
+    switch (tree->op) {
+    case IDC:
+      tree->idc = getClass(listClass, tree->u.str);
+      break;
+    case DECLS:
+      tree->u.declParams->type = getClass(listClass, tree->u.declParams->typeName);
+      resolveTree(tree->u.declParams->expression);
+    default:
+      for(i = 0; i<tree->nbChildren; i++) {		
+	resolveTree(getChild(tree, i));
+      }			
     }
+  }
 }
     
 void resolveDeclParam(DeclParamP declParam) {
-    if(declParam != NULL) {
-	declParam->type = getClass(listClass, declParam->typeName);
-	if(declParam->decl)
-	    resolveTree(declParam->expression);
-	resolveDeclParam(declParam->next);
-    }
+  if(declParam != NULL) {
+    declParam->type = getClass(listClass, declParam->typeName);
+    if(declParam->decl)
+      resolveTree(declParam->expression);
+    resolveDeclParam(declParam->next);
+  }
 }
 
 void resolveMethod(MethodP method) {
-    if(method != NULL) {
-	if(method->body) {
-	    resolveTree(method->body);
-	    if(method->body && getChild(method->body, 0)->op == IDC)
-		method->returnType = getClass(listClass, getChild(method->body, 0)->u.str);	    
-	}
-	resolveDeclParam(method->params);
-	resolveMethod(method->next);
+  if(method != NULL) {
+    if(method->body) {
+      resolveTree(method->body);
+      if(method->body && getChild(method->body, 0)->op == IDC)
+	method->returnType = getClass(listClass, getChild(method->body, 0)->u.str);	    
     }
+    resolveDeclParam(method->params);
+    resolveMethod(method->next);
+  }
 }
 
 void resolveTreeMain(ClassP class) {
-    if(class != NULL) {
-	resolveTreeMain(class->next);
-	if(class->superTree && class->superTree->op == EXT && getChild(class->superTree, 0)->op == IDC)
-	    class->super = getClass(listClass, getChild(class->superTree, 0)->u.str);
-	resolveTree(class->constructorBody);
-	resolveDeclParam(class->constructorParams);
-	resolveMethod(class->methods);
-	resolveDeclParam(class->members);
-	if(class->superTree)
-	    resolveTree(getChild(class->superTree, 1));
-    }
+  if(class != NULL) {
+    resolveTreeMain(class->next);
+    if(class->superTree && class->superTree->op == EXT && getChild(class->superTree, 0)->op == IDC)
+      class->super = getClass(listClass, getChild(class->superTree, 0)->u.str);
+    resolveTree(class->constructorBody);
+    resolveDeclParam(class->constructorParams);
+    resolveMethod(class->methods);
+    resolveDeclParam(class->members);
+    if(class->superTree)
+      resolveTree(getChild(class->superTree, 1));
+  }
 }
 	
 void evalMain(TreeP tree) {
-    resolveTreeMain(listClass);
-    resolveTree(tree);
-    pprintMain(tree);
-    printf("%d\n",verif_override(listClass));
-    printf("%d\n",circuit_class(listClass));
-    verif_portee(listClass);
+  resolveTreeMain(listClass);
+  resolveTree(tree);
+  pprintMain(tree);
+  verif_override(listClass);
+  circuit_class(listClass);
+  verif_scope(listClass, tree);
 }

@@ -47,65 +47,71 @@ typedef struct _Env Env, *EnvP;
 
 /* la structure d'un arbre (noeud ou feuille) */
 struct _Tree {
-    short op;         /* etiquette de l'operateur courant */
-    short nbChildren; /* nombre de sous-arbres */
-    ClassP idc;
-    int isCallMethod;
-    union {	
-	char *str;      /* valeur de la feuille si op = Id ou STR */
-	int val;        /* valeur de la feuille si op = Cste */
-	DeclParamP declParams;
-	struct _Tree **children; /* tableau des sous-arbres */
-    } u;
+  short op;         /* etiquette de l'operateur courant */
+  short nbChildren; /* nombre de sous-arbres */
+  ClassP idc;
+  int isCallMethod;
+  EnvP env;
+  EnvP envS;
+  union {	
+    char *str;      /* valeur de la feuille si op = Id ou STR */
+    int val;        /* valeur de la feuille si op = Cste */
+    DeclParamP declParams;
+    struct _Tree **children; /* tableau des sous-arbres */
+  } u;
 };
 
 struct _Method {
-    char* name;
-    DeclParamP params;
-    TreeP body;
-    EnvP env;
-    ClassP returnType;
-    int override;
-    struct _Method *next;
+  char* name;
+  DeclParamP params;
+  TreeP body;
+  ClassP returnType;
+  int override;
+  EnvP env;
+  EnvP envS;
+  struct _Method *next;
 };
 
 struct _Class {
-    char* name;
-    TreeP constructorBody;
-    DeclParamP constructorParams;
-    MethodP methods;
-    EnvP env;
-    DeclParamP members;
-    struct _Class *super;
-    TreeP superTree;
-    struct _Class *next;
+  char* name;
+  TreeP constructorBody;
+  DeclParamP constructorParams;
+  MethodP methods;
+  EnvP env;
+  EnvP envS;
+  DeclParamP members;
+  struct _Class *super;
+  TreeP superTree;
+  struct _Class *next;
 };
 
 struct _DeclParam {
-    char* name;
-    ClassP type;
-    char* typeName;
-    TreeP expression;
-    int decl;
-    struct _DeclParam *next;    
+  char* name;
+  ClassP type;
+  char* typeName;
+  TreeP expression;
+  int decl;
+  EnvP env;
+  EnvP envS;
+  struct _DeclParam *next;    
 };
 
 struct _Env {
-    int scope;
-    char* name;
-    ClassP type;
-    struct _Env *next;
+  int isMethod;
+  char* name;
+  ClassP type;
+  struct _Env *next;
 };
 
 typedef union
 {
-    char *S;
-    char C;
-    int I;
-    TreeP pT;
-    MethodP pM;
-    ClassP pC;
-    DeclParamP pDP;
+  char *S;
+  char C;
+  int I;
+  TreeP pT;
+  MethodP pM;
+  ClassP pC;
+  DeclParamP pDP;
 } YYSTYPE;
 
 
@@ -162,9 +168,10 @@ bool override_method(MethodP m, MethodP r);
 MethodP return_override_methods(MethodP methods);
 bool verif_override(ClassP lc);
 
-void print_env(EnvP env);
-void print_class(ClassP lc); 
-bool verif_portee (ClassP lc);
-void copy_param(DeclParamP vars,ClassP lc);
-void copy_env(EnvP super, ClassP lc);
-void fill_env(ClassP lc);
+bool verif_scope (ClassP c, TreeP main);
+EnvP envSClass(ClassP c);
+EnvP envSDeclParam(DeclParamP d);
+EnvP envSMethod(MethodP m);
+EnvP envSTree(TreeP t);
+EnvP concatEnv(EnvP e1, EnvP e2);
+EnvP concatEnv(EnvP e1, EnvP e2);
