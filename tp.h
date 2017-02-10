@@ -79,6 +79,7 @@ struct _Class {
   MethodP methods;
   EnvP env;
   EnvP envS;
+  int envSet;
   DeclParamP members;
   struct _Class *super;
   TreeP superTree;
@@ -169,9 +170,19 @@ MethodP return_override_methods(MethodP methods);
 bool verif_override(ClassP lc);
 
 bool verif_scope (ClassP c, TreeP main);
+void envClass(ClassP c);
+void envClass2(ClassP c);
+void envClassProp(ClassP c);
+void envMethods(MethodP m, EnvP envH);
+void envMembers(DeclParamP d, EnvP envH);
+void envDeclParam(DeclParamP d, EnvP envH);
+EnvP inEnv(EnvP env, char* name);
+EnvP inEnvMethod(EnvP env, char* name);
+void envTree(TreeP t, EnvP envH);
 EnvP envSClass(ClassP c);
 EnvP envSDeclParam(DeclParamP d);
 EnvP envSMethod(MethodP m);
 EnvP envSTree(TreeP t);
 EnvP concatEnv(EnvP e1, EnvP e2);
-EnvP concatEnv(EnvP e1, EnvP e2);
+EnvP copyEnv(EnvP e);
+EnvP envSExpr(TreeP t);

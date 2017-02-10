@@ -23,6 +23,8 @@
 #include "tp.h"
 #include "tp_y.h"
 
+#include <stdio.h>
+
 extern int yylex();
 extern void yyerror(char *);
 %}

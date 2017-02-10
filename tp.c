@@ -70,9 +70,13 @@ int main(int argc, char **argv) {
 
   /* redirige l'entree standard sur le fichier... */
   close(0); dup(fi); close(fi);
-  makeClass("Integer");
-  makeClass("String");
-
+  ClassP integer = makeClass("Integer");
+  ClassP string = makeClass("String");
+  integer->methods = makeMethod(0, "toString", NULL, NULL);
+  integer->methods->returnType = string;
+  string->methods = makeMethod(0, "println", NULL, NULL);
+  string->methods->next = makeMethod(0, "print", NULL, NULL);
+  
   res = yyparse();
   if (out != NIL(FILE) && out != stdout) fclose(out);
   return res ? SYNTAX_ERROR : errorCode;
@@ -194,6 +198,7 @@ ClassP makeClass(char *name) {
   class->next = NULL;
   class->env = NULL;
   class->envS = NULL;
+  class->envSet = 0;
   if(listClass != NULL)
     class->next = listClass;
   listClass = class;
