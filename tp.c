@@ -269,15 +269,16 @@ void resolveTree(TreeP tree) {
     int i = 0;
     switch (tree->op) {
     case IDC:
-      tree->idc = getClass(listClass, tree->u.str);
+      tree->idc = getClass(listClass, tree->u.str);      
       break;
     case DECLS:
-      tree->u.declParams->type = getClass(listClass, tree->u.declParams->typeName);
-      resolveTree(tree->u.declParams->expression);
+      resolveDeclParam(tree->u.declParams);      
+      break;
     default:
       for(i = 0; i<tree->nbChildren; i++) {		
 	resolveTree(getChild(tree, i));
-      }			
+      }
+      break;
     }
   }
 }
@@ -285,7 +286,7 @@ void resolveTree(TreeP tree) {
 void resolveDeclParam(DeclParamP declParam) {
   if(declParam != NULL) {
     declParam->type = getClass(listClass, declParam->typeName);
-    if(declParam->decl)
+    if(declParam->decl == 1)
       resolveTree(declParam->expression);
     resolveDeclParam(declParam->next);
   }
@@ -295,7 +296,7 @@ void resolveMethod(MethodP method) {
   if(method != NULL) {
     if(method->body) {
       resolveTree(method->body);
-      if(method->body && getChild(method->body, 0)->op == IDC)
+      if(method->body && getChild(method->body, 0) && getChild(method->body, 0)->op == IDC)
 	method->returnType = getClass(listClass, getChild(method->body, 0)->u.str);	    
     }
     resolveDeclParam(method->params);
