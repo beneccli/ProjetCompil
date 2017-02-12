@@ -10,26 +10,27 @@ extern TreeP getChild(TreeP tree, int rank);
 extern void setError(int code);
 
 /*classes circulaires*/
-bool circuit_class(ClassP lc) {
+bool circuitClass(ClassP lc) {
   if (lc != NULL) {
     if(!isupper(lc->name[0]))
-      return FALSE;
+	return FALSE;
     if (getClass(lc->next,lc->name) != NULL)
       return FALSE;
     if (lc->superTree != NULL)
-      if (getClass(lc->next,getChild(lc->superTree,0)->u.str) == NULL)
+      if (getClass(lc->next,lc->super->name) == NULL 
+        || !strcmp(lc->super->name,"Integer") || !strcmp(lc->super->name,"String") )
 	return FALSE;
-    return circuit_class(lc->next);
+    return circuitClass(lc->next);
   } 
   else return TRUE;
 }
 
 /*override*/
-bool same_params (DeclParamP p1, DeclParamP p2) {
+bool sameParams (DeclParamP p1, DeclParamP p2) {
   if (p1 != NULL && p2 != NULL) {
     if (p1->decl != 0 || p2->decl != 0 || strcmp(p1->typeName,p2->typeName) )
       return FALSE;
-    return same_params(p1->next,p2->next);
+    return sameParams(p1->next,p2->next);
   } 
   else if ( p1 != NULL || p2 != NULL)
     return FALSE;
@@ -37,9 +38,10 @@ bool same_params (DeclParamP p1, DeclParamP p2) {
 }
 
 
-bool override_method(MethodP m, MethodP r) {
+bool overrideMethod(MethodP m, MethodP r) {
+  if (m == NULL || r == NULL) return FALSE;
   if (m->override == 0 && r->override == 1 && strcmp(m->name,r->name) == 0) {
-    if (same_params(m->params,r->params)) {
+    if (sameParams(m->params,r->params)) {
       if (getChild(m->body,0) == NULL && getChild(r->body,0) == NULL)
         return TRUE;
       else if (strcmp(getChild(m->body,0)->u.str,getChild(r->body,0)->u.str) == 0)
@@ -50,43 +52,60 @@ bool override_method(MethodP m, MethodP r) {
 }
 
 
-MethodP return_override_methods(MethodP methods) {
-  MethodP res = NULL;
-  MethodP res2 = NULL;
-  MethodP m = methods;
-  while (m != NULL) {
-    if (m->override) {
-      res = m;
-      res->next = res2;
-      res2 = res;
-    }
-    m = m->next;
-  }
-  return res2;
+bool isOverride (MethodP m) {
+  if (m == NULL) return FALSE;
+  else if (m->override) return TRUE;
+  else return isOverride(m->next);
 }
 
-bool verif_override(ClassP lc) {
+bool overrideSuper(ClassP lc, MethodP m) {    
+  MethodP tmp = NULL;
+  tmp = getMethod(lc,m->name);
+  if (overrideMethod(tmp,m))
+    return TRUE;
+  if (lc->superTree != NULL)
+    return overrideSuper(lc->super,m);
+  return FALSE;
+}
+
+bool surcharge(ClassP lc, MethodP method) {
+  MethodP tmp = getMethod(lc,method->name);
+  if (tmp != NULL && tmp != method) return FALSE;
+  else if (lc->super != NULL)
+    return surcharge(lc->super,method);
+  return TRUE;
+}
+
+
+void override(ClassP lc) {
   if (lc != NULL) {
-    if (lc->superTree == NULL && return_override_methods(lc->methods) != NULL)
-      return FALSE;
-    if (lc->superTree != NULL) {
-      MethodP methods = return_override_methods(lc->methods);
-      ClassP class = getClass(lc,getChild(lc->superTree,0)->u.str);
-      MethodP tmp = NULL;
+    if (lc->superTree == NULL && isOverride(lc->methods)) {
+      printf("Error when overriding : %s have no parent", lc->methods->name);
+      setError(OVERRIDE_ERROR);
+    }
+    if (lc->superTree != NULL && isOverride(lc->methods)) {
+      MethodP methods = lc->methods;
       while (methods != NULL) {
-        if ((tmp=getMethod(class,methods->name)) == NULL)
-          return FALSE;
-        if (!override_method(tmp,methods))
-          return FALSE;
+        if (methods->override) {
+          if (!overrideSuper(lc->super,methods)) {
+	    printf("Error when overriding %s", methods->name);
+            setError(OVERRIDE_ERROR);
+	  }
+        }
+        else {
+          if (!surcharge(lc,methods)) {
+	    printf("Error when surcharging %s", methods->name);
+	    setError(SURCHARGE_ERROR);
+	  }
+        }
         methods = methods->next;
       }
-    } 
-    return verif_override(lc->next);
+    }
+    override(lc->next);
   }
-  else return TRUE; 
 }
 
-/*Portee*/
+/*Portee et typage*/
 EnvP copyEnv(EnvP e) {
   EnvP itEnv = e;
   EnvP startNewEnv = NULL;
@@ -124,7 +143,7 @@ EnvP concatEnv(EnvP e1, EnvP e2) {
   return e1;
 }
 
-bool verif_scope(ClassP c, TreeP main) {
+bool scopeType(ClassP c, TreeP main) {
   envSClass(c);
   envSTree(main);
   envClass(c);
@@ -242,38 +261,44 @@ void envTree(TreeP t, EnvP envH) {
 void envTree2(TreeP t) {
   if(t != NULL) {
     int i;
-    ClassP type = NULL;
     switch (t->op) {
     case DECLS:
       envDeclParam(t->u.declParams, copyEnv(t->env));
       break;
     case ID:      
-      if(t->isCallMethod == 1 && !inEnvMethod(t->env, t->u.str))
+      if(t->isCallMethod == 1 && !inEnvMethod(t->env, t->u.str)) {
 	printf("Not in env func : %s\n", t->u.str);
-      if(t->isCallMethod == 0 && !inEnv(t->env, t->u.str))
+	setError(CONTEXT_ERROR);
+      }
+      if(t->isCallMethod == 0 && !inEnv(t->env, t->u.str)) {
 	printf("Not in env : %s\n", t->u.str);
+	setError(CONTEXT_ERROR);
+      }
       break;
     case THI:
-      if(!inEnv(t->env, "this"))
+      if(!inEnv(t->env, "this")) {
 	printf("Not in env : this\n");
+	setError(CONTEXT_ERROR);
+      }
       break;
     case SUP:
-      if(!inEnv(t->env, "super"))
+      if(!inEnv(t->env, "super")) {
 	printf("Not in env : super\n");
+	setError(CONTEXT_ERROR);
+      }
       break;
     case RES:
-      if(!inEnv(t->env, "result"))
+      if(!inEnv(t->env, "result")) {
 	printf("Not in env : result\n");
-      break;
-    case CAST:
-    case NEWC:
-      type = getChild(t, 0)->idc;
-      if(type == NULL) {
-	printf("Error cast or new\n");
-	break;
+	setError(CONTEXT_ERROR);
       }
-      envTree2(getChild(t, 1));
       break;    
+    case IDC:
+      if(t->idc == NULL) {
+	printf("Class %s doesn't exist\n", t->u.str);
+	setError(DECL_ERROR);
+      }
+      break;	
     default:
       for(i = 0; i<t->nbChildren; i++)
 	envTree2(getChild(t, i));
@@ -299,11 +324,19 @@ EnvP envSExpr(TreeP t, EnvP envH) {
     if(type == NULL)
       return NULL;
     t->envS = concatEnv(copyEnv(type->envS), copyEnv(type->env));
+    t->idc = type;
     return t->envS;
   }
   else if(t->op == STRG) {
     ClassP type = getClass(listClass, "String");
     t->envS = copyEnv(type->envS);
+    t->idc = type;
+    return t->envS;
+  }
+  else if(t->op == Cste) {
+    ClassP type = getClass(listClass, "Integer");
+    t->envS = copyEnv(type->envS);
+    t->idc = type;
     return t->envS;
   }
   else if(t->op == THI) {
@@ -314,6 +347,7 @@ EnvP envSExpr(TreeP t, EnvP envH) {
     if(!type)
       return NULL;
     t->envS = concatEnv(copyEnv(type->envS), copyEnv(type->env));
+    t->idc = type;
     return t->envS;
   }
   else if(t->op == SUP) {
@@ -324,12 +358,14 @@ EnvP envSExpr(TreeP t, EnvP envH) {
     if(!type)
       return NULL;
     t->envS = concatEnv(copyEnv(type->envS), copyEnv(type->env));
+    t->idc = type;
     return t->envS;
   }
   else if(t->op == SELEC || t->op == ENVOI) {    
     t->envS = copyEnv(envSExpr(getChild(t, 0), copyEnv(t->env)));
     if(t->op == ENVOI)
       envSExpr(getChild(t, 2), copyEnv(t->env));
+    t->idc = getChild(t, 1)->idc;
     return envSExpr(getChild(t, 1), copyEnv(t->envS));
   }
   else if(t->op == CAST || t->op == NEWC) {
@@ -339,6 +375,7 @@ EnvP envSExpr(TreeP t, EnvP envH) {
     }
     envSExpr(getChild(t, 1), copyEnv(t->env));
     t->envS = concatEnv(copyEnv(type->envS), copyEnv(type->env));
+    t->idc = type;
     return t->envS;
   }
   else if(t->op == CONCAT) {
@@ -346,6 +383,7 @@ EnvP envSExpr(TreeP t, EnvP envH) {
     t->envS = copyEnv(type->envS);
     envSExpr(getChild(t, 0), copyEnv(t->env));
     envSExpr(getChild(t, 1), copyEnv(t->env));
+    t->idc = type;
     return t->envS;
   }
   else if(t->op == DECLS) {
@@ -355,16 +393,34 @@ EnvP envSExpr(TreeP t, EnvP envH) {
     return NULL;
   }
   else if(t->op == ISBLOC){
-    int i;
-    for(i = 0; i < t->nbChildren; i++) {
-      envSExpr(getChild(t, i), concatEnv(copyEnv(t->envS), copyEnv(t->env)));
-    }
+    envSExpr(getChild(t, 0), concatEnv(copyEnv(t->envS), copyEnv(t->env)));
+    envSExpr(getChild(t, 1), concatEnv(copyEnv(t->envS), copyEnv(t->env)));
     return NULL;    
-  }
+  }  
   else {
     int i;
     for(i = 0; i < t->nbChildren; i++) {
       envSExpr(getChild(t, i), copyEnv(t->env));
+    }
+    ClassP type = getClass(listClass, "Integer");
+    switch (t->op) {    
+    case PLUS:
+    case MINUS:
+    case MULT:
+    case QUO: 
+    case NE:
+    case EQ:
+    case LT: 
+    case LE:
+    case GT:
+    case GE:
+      if((getChild(t, 1) ? (getChild(t, 0)->idc == getChild(t, 1)->idc) : TRUE) && getChild(t, 0)->idc == type)
+	t->idc = type;
+      break;
+    case ADD:
+    case SUB:      
+      if(getChild(t, 0)->idc == type)
+	t->idc = type;
     }
     return NULL;
   }

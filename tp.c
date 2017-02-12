@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 
 void setError(int code) {
   errorCode = code;
-  if (code != NO_ERROR) { noCode = TRUE; /*  abort(); */}
+  if (code != NO_ERROR) { noCode = TRUE; exit(errorCode); }
 }
 
 
@@ -309,6 +309,7 @@ void resolveTreeMain(ClassP class) {
     resolveTreeMain(class->next);
     if(class->superTree && class->superTree->op == EXT && getChild(class->superTree, 0)->op == IDC)
       class->super = getClass(listClass, getChild(class->superTree, 0)->u.str);
+    resolveTree(class->superTree);
     resolveTree(class->constructorBody);
     resolveDeclParam(class->constructorParams);
     resolveMethod(class->methods);
@@ -322,7 +323,10 @@ void evalMain(TreeP tree) {
   resolveTreeMain(listClass);
   resolveTree(tree);
   pprintMain(tree);
-  //verif_override(listClass);
-  //circuit_class(listClass);
-  verif_scope(listClass, tree);
+  if(!circuitClass(listClass)) {
+    printf("Erreur de circuit de classe");
+    setError(CIRCUIT_ERROR);
+  }
+  override(listClass);
+  scopeType(listClass, tree);
 }

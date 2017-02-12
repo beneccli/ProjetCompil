@@ -24,6 +24,9 @@ enum {ARG, GLOBAL, LOCAL};
 #define CONTEXT_ERROR	40	/* default value for this stage */
 #define DECL_ERROR	41	/* more precise information */
 #define TYPE_ERROR	42
+#define CIRCUIT_ERROR   43
+#define OVERRIDE_ERROR  44
+#define SURCHARGE_ERROR 45
 #define EVAL_ERROR	50
 #define UNEXPECTED	10O
 
@@ -163,13 +166,15 @@ void pprintAllClasse (ClassP c);
 void pprintMain(TreeP tree);
 
 /*Verif*/
-bool circuit_class(ClassP lc);
-bool same_params (DeclParamP p1, DeclParamP p2);
-bool override_method(MethodP m, MethodP r);
-MethodP return_override_methods(MethodP methods);
-bool verif_override(ClassP lc);
-
-bool verif_scope (ClassP c, TreeP main);
+bool circuitClass(ClassP lc);
+bool sameParams (DeclParamP p1, DeclParamP p2);
+bool overrideMethod(MethodP m, MethodP r);
+bool overrideSuper(ClassP lc, MethodP m);
+bool isOverride(MethodP m);
+bool overrideSuper(ClassP lc, MethodP m);
+bool surcharge(ClassP lc, MethodP method);
+void override(ClassP lc);
+bool scopeType(ClassP c, TreeP main);
 void envClass(ClassP c);
 void envClass2(ClassP c);
 void envClassProp(ClassP c);
