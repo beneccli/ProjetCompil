@@ -93,7 +93,7 @@ blockCons:                                                   {$$ = NIL(Tree);}
 ;
 
 
-block: '{' blockOpt '}'                                      {$$ =$2;}
+block: '{' blockOpt '}'                                      {$$ = $2;}
 ;
 
 

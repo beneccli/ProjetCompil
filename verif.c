@@ -135,8 +135,9 @@ bool verif_scope(ClassP c, TreeP main) {
 }
 
 void envClass(ClassP c) {
-  if(c != NULL && c->envSet == 0) {
-    envClass2(c);
+  if(c != NULL) {
+    if(c->envSet == 0)
+      envClass2(c);
     envClass(c->next);
   }
 }
@@ -168,15 +169,15 @@ void envClassProp(ClassP c) {
       env = concatEnv(super, env); 
     }
     if(c->constructorParams != NULL)
-	envTree(c->constructorBody, concatEnv(copyEnv(c->constructorParams->envS), env));
+      envTree(c->constructorBody, concatEnv(copyEnv(c->constructorParams->envS), env));
     else
-	envTree(c->constructorBody, env);
-    envMethods(c->methods, env);
+      envTree(c->constructorBody, env);
+    envMethods(c->methods, copyEnv(env));
     envDeclParam(c->members, c->env);
     if(c->constructorParams != NULL)
-	envTree(c->superTree, copyEnv(c->constructorParams->envS));
+      envTree(c->superTree, copyEnv(c->constructorParams->envS));
     else
-	envTree(c->superTree, NULL);
+      envTree(c->superTree, NULL);
     envClassProp(c->next);
   }
 }
@@ -215,7 +216,7 @@ void envDeclParam(DeclParamP d, EnvP envH) {
 
 EnvP inEnv(EnvP env, char* name) {
   if(env != NULL && env->name != NULL) {
-    if(!strcmp(env->name, name) && env->isMethod == 0)
+    if(strcmp(env->name, name) == 0 && env->isMethod == 0)
       return env;
     return inEnv(env->next, name);
   }
@@ -224,7 +225,7 @@ EnvP inEnv(EnvP env, char* name) {
 
 EnvP inEnvMethod(EnvP env, char* name) {
   if(env != NULL && env->name != NULL) {
-    if(!strcmp(env->name, name) && env->isMethod == 1)
+    if(strcmp(env->name, name) == 0 && env->isMethod == 1)
       return env;
     return inEnvMethod(env->next, name);
   }
@@ -244,7 +245,7 @@ void envTree2(TreeP t) {
     ClassP type = NULL;
     switch (t->op) {
     case DECLS:
-      envDeclParam(t->u.declParams, t->env);
+      envDeclParam(t->u.declParams, copyEnv(t->env));
       break;
     case ID:      
       if(t->isCallMethod == 1 && !inEnvMethod(t->env, t->u.str))
@@ -347,10 +348,23 @@ EnvP envSExpr(TreeP t, EnvP envH) {
     envSExpr(getChild(t, 1), copyEnv(t->env));
     return t->envS;
   }
-  else {
+  else if(t->op == DECLS) {
+    if(t->u.declParams->decl == 1) {
+      envSExpr(t->u.declParams->expression, copyEnv(t->env));
+    }
+    return NULL;
+  }
+  else if(t->op == ISBLOC){
     int i;
     for(i = 0; i < t->nbChildren; i++) {
       envSExpr(getChild(t, i), concatEnv(copyEnv(t->envS), copyEnv(t->env)));
+    }
+    return NULL;    
+  }
+  else {
+    int i;
+    for(i = 0; i < t->nbChildren; i++) {
+      envSExpr(getChild(t, i), copyEnv(t->env));
     }
     return NULL;
   }
@@ -400,7 +414,7 @@ EnvP envSMethod(MethodP m) {
     env->type = m->returnType;
     env->next = NULL;
     
-    m->envS =  concatEnv(env, copyEnv(envSMethod(m->next)));
+    m->envS = concatEnv(env, copyEnv(envSMethod(m->next)));
 
     return m->envS;
   }
@@ -414,13 +428,9 @@ EnvP envSTree(TreeP t) {
     case DECLS:
       t->envS = copyEnv(envSDeclParam(t->u.declParams));
       return t->envS;;          
-    case ITE:
     case BODY:
     case LIST:
-      t->envS = copyEnv(envSTree(getChild(t, 0)));
-      for(i = 1; i<t->nbChildren; t++)
-	t->envS = concatEnv(t->envS, copyEnv(envSTree(getChild(t, i))));   
-      return t->envS;
+    case ITE:
     case ISBLOC:
       t->envS = copyEnv(envSTree(getChild(t, 0)));
       for(i = 1; i<t->nbChildren; t++)

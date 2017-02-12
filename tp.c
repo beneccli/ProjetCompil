@@ -247,7 +247,7 @@ DeclParamP makeParam(char* name, char* class) {
 MethodP getMethod(ClassP cl,char* name) {
   MethodP method = cl->methods;
   while(method != NULL) {
-    if(!strcmp(method->name, name))
+    if(strcmp(method->name, name) == 0)
       return method;
     method = method->next;
   }
@@ -257,7 +257,7 @@ MethodP getMethod(ClassP cl,char* name) {
 ClassP getClass(ClassP classEnv, char* name) {
   ClassP class = classEnv;
   while(class != NULL) {
-    if(!strcmp(class->name, name))
+    if(strcmp(class->name, name) == 0)
       return class;
     class = class->next;
   }
@@ -322,7 +322,7 @@ void evalMain(TreeP tree) {
   resolveTreeMain(listClass);
   resolveTree(tree);
   pprintMain(tree);
-  verif_override(listClass);
-  circuit_class(listClass);
+  //verif_override(listClass);
+  //circuit_class(listClass);
   verif_scope(listClass, tree);
 }
