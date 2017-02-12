@@ -222,11 +222,26 @@ void envMethods(MethodP m, EnvP envH) {
   }  
 }
 
+bool inType(ClassP l, ClassP r) {
+  ClassP rc = r;
+  while(rc != NULL) {
+    if(l == rc)
+      return TRUE;
+    if(rc->super != NULL)
+      return inType(l, rc->super);
+  }
+  return FALSE;
+}
+
 void envDeclParam(DeclParamP d, EnvP envH) {
   if(d != NULL) {
     if(d->decl == 1) {
       d->env = envH;
       envTree(d->expression, copyEnv(d->env));
+      if(d->expression != NULL && (!inType(d->type, d->expression->idc) || d->expression->idc == NULL)) {
+	printf("Problème de typage\n");
+	setError(TYPE_ERROR);
+      }
     }
 
     envDeclParam(d->next, concatEnv(copyEnv(d->envS), copyEnv(d->env)));
@@ -302,6 +317,14 @@ void envTree2(TreeP t) {
     default:
       for(i = 0; i<t->nbChildren; i++)
 	envTree2(getChild(t, i));
+      if(t->op == AFFECT) {
+	if(!inType(getChild(t, 0)->idc, getChild(t, 1)->idc)
+	   || getChild(t, 0)->idc == NULL
+	   || getChild(t, 1)->idc == NULL) {
+	  printf("Problème de typage\n");
+	  setError(TYPE_ERROR);
+	}
+      }
       break;
     }
   }
@@ -327,13 +350,22 @@ EnvP envSExpr(TreeP t, EnvP envH) {
     t->idc = type;
     return t->envS;
   }
+  if(t->op == RES) {   
+    EnvP env = inEnv(t->env, "result");
+    if(env)
+      type = env->type;
+    if(type == NULL)
+      return NULL;
+    t->idc = type;
+    return NULL;
+  }
   else if(t->op == STRG) {
     ClassP type = getClass(listClass, "String");
     t->envS = copyEnv(type->envS);
     t->idc = type;
     return t->envS;
   }
-  else if(t->op == Cste) {
+  else if(t->op == CONST) {
     ClassP type = getClass(listClass, "Integer");
     t->envS = copyEnv(type->envS);
     t->idc = type;
@@ -365,8 +397,10 @@ EnvP envSExpr(TreeP t, EnvP envH) {
     t->envS = copyEnv(envSExpr(getChild(t, 0), copyEnv(t->env)));
     if(t->op == ENVOI)
       envSExpr(getChild(t, 2), copyEnv(t->env));
+
+    EnvP tmp = envSExpr(getChild(t, 1), copyEnv(t->envS));
     t->idc = getChild(t, 1)->idc;
-    return envSExpr(getChild(t, 1), copyEnv(t->envS));
+    return tmp;
   }
   else if(t->op == CAST || t->op == NEWC) {
     type = getChild(t, 0)->idc;
@@ -421,6 +455,7 @@ EnvP envSExpr(TreeP t, EnvP envH) {
     case SUB:      
       if(getChild(t, 0)->idc == type)
 	t->idc = type;
+      break;
     }
     return NULL;
   }
